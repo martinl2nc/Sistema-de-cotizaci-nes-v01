@@ -1,88 +1,41 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getQuotesList, updateQuoteStatus, deleteQuote, getSellers } from '@/services/quotesService';
-import type { QuoteListItem } from '@/services/quotesService';
+import { useQuotesList, useUpdateQuoteStatus, useDeleteQuote } from '@/hooks/useQuotes';
+import { useSellersList } from '@/hooks/useSellers';
+import type { Quote, QuoteStatus } from '@/services/quotes.service';
 
 export default function QuotesList() {
   const navigate = useNavigate();
-  const [quotes, setQuotes] = useState<QuoteListItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Filter state
+
+  // ─── Server State (Capa 2 hooks) ────────────────────────────
+  const { data: quotes = [], isLoading, isError, error } = useQuotesList();
+  const { data: sellers = [] } = useSellersList();
+  const updateStatusMutation = useUpdateQuoteStatus();
+  const deleteMutation = useDeleteQuote();
+
+  // ─── UI State (local only) ──────────────────────────────────
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSeller, setSelectedSeller] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
-  const [sellers, setSellers] = useState<{id: string, nombre: string}[]>([]);
 
-  useEffect(() => {
-    async function initData() {
-      try {
-        setLoading(true);
-        const [quotesData, sellersData] = await Promise.all([
-          getQuotesList(),
-          getSellers()
-        ]);
-        setQuotes(quotesData || []);
-        setSellers(sellersData || []);
-        setError(null);
-      } catch (err: any) {
-        setError(err.message || 'Error desconocido');
-      } finally {
-        setLoading(false);
-      }
-    }
+  // ─── Event Handlers ─────────────────────────────────────────
 
-    initData();
-  }, []);
-
-  const loadQuotes = async () => {
-    try {
-      setLoading(true);
-      const data = await getQuotesList();
-      setQuotes(data || []);
-      setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Error desconocido');
-    } finally {
-      setLoading(false);
-    }
+  const handleStatusChange = (id: string, newStatus: string) => {
+    updateStatusMutation.mutate({ id, status: newStatus as QuoteStatus });
   };
 
-  const handleStatusChange = async (id: string, newStatus: string) => {
-    try {
-      // Optimistic update
-      setQuotes((prev: QuoteListItem[]) => prev.map(q => q.id === id ? { ...q, estado: newStatus as any } : q));
-      await updateQuoteStatus(id, newStatus);
-    } catch (err: any) {
-      setError('Error al actualizar estado: ' + err.message);
-      loadQuotes(); // Rollback
-    }
-  };
-
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     const confirmed = window.confirm('¿Estás seguro de que deseas eliminar esta cotización?');
     if (!confirmed) return;
-
-    try {
-      setSaving(true);
-      await deleteQuote(id);
-      setQuotes((prev: QuoteListItem[]) => prev.filter(q => q.id !== id));
-    } catch (err: any) {
-      setError('Error al eliminar: ' + err.message);
-    } finally {
-      setSaving(false);
-    }
+    deleteMutation.mutate(id);
   };
 
-  const [saving, setSaving] = useState(false);
+  // ─── Filtering Logic ───────────────────────────────────────
 
-  // Normalizar cadena para búsqueda (quitar acentos y pasar a minúsculas)
   const normalizeAccent = (str: string) => {
     return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   };
 
-  // Filtering Logic
   const filteredQuotes = useMemo(() => {
     try {
       if (!quotes) return [];
@@ -92,8 +45,7 @@ export default function QuotesList() {
         // 1. Search Logic
         let matchSearch = true;
         if (search !== '') {
-          // Obtener datos del cliente de forma segura (objeto o primer elemento de array)
-          const cliente = Array.isArray(quote.cliente) ? quote.cliente[0] : quote.cliente;
+          const cliente = quote.clientes;
           
           const searchableFields = [
             String(quote.numero_correlativo || ''),
@@ -109,7 +61,7 @@ export default function QuotesList() {
         }
 
         // 2. Seller filter
-        const sellerName = Array.isArray(quote.vendedor) ? quote.vendedor[0]?.nombre : quote.vendedor?.nombre;
+        const sellerName = quote.vendedores?.nombre;
         const matchSeller = selectedSeller === '' || sellerName === selectedSeller;
 
         // 3. Status filter
@@ -123,7 +75,8 @@ export default function QuotesList() {
     }
   }, [quotes, searchTerm, selectedSeller, selectedStatus]);
 
-  // Helpers para formateo
+  // ─── Helpers ────────────────────────────────────────────────
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(amount || 0);
   };
@@ -139,9 +92,7 @@ export default function QuotesList() {
     }).format(date);
   };
 
-  const getClientName = (clienteData: any) => {
-    if (!clienteData) return 'Desconocido';
-    const cliente = Array.isArray(clienteData) ? clienteData[0] : clienteData;
+  const getClientName = (cliente: Quote['clientes']) => {
     if (!cliente) return 'Desconocido';
 
     if (cliente.razon_social && cliente.razon_social.trim() !== '') {
@@ -153,9 +104,9 @@ export default function QuotesList() {
     return 'Sin Nombre';
   };
 
-  const getSellerName = (vendedor: any) => {
+  const getSellerName = (vendedor: Quote['vendedores']) => {
     if (!vendedor) return 'No asignado';
-    return vendedor.nombre || 'Desconocido';
+    return vendedor?.nombre || 'Desconocido';
   };
 
   return (
@@ -205,7 +156,9 @@ export default function QuotesList() {
               <option value="">Por Estado</option>
               <option value="Borrador">Borrador</option>
               <option value="Por Revisar">Por Revisar</option>
-              <option value="Aprobada">Aprobada</option>
+              <option value="Generar PDF">Generar PDF</option>
+              <option value="Enviada">Enviada</option>
+              <option value="Cancelada">Cancelada</option>
             </select>
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#94A3B8] group-hover:text-[#E2E8F0] transition-colors">
               <iconify-icon icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
@@ -222,7 +175,7 @@ export default function QuotesList() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar por RUC o Nombre..."
+            placeholder="Buscar por Correlativo, Doc o Nombre..."
             className="w-full bg-[#0F1115] border border-[#334155] rounded-md py-2 pl-10 pr-4 text-sm text-[#E2E8F0] placeholder-[#94A3B8]/60 shadow-sm focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors"
           />
         </div>
@@ -244,7 +197,7 @@ export default function QuotesList() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#334155] bg-[#181B21]">
-              {loading && (
+              {isLoading && (
                 <tr>
                   <td colSpan={7} className="px-5 py-8 text-center text-[#94A3B8] text-sm">
                     <div className="flex items-center justify-center gap-2">
@@ -255,15 +208,15 @@ export default function QuotesList() {
                 </tr>
               )}
               
-              {!loading && error && (
+              {!isLoading && isError && (
                 <tr>
                   <td colSpan={7} className="px-5 py-8 text-center text-red-400 text-sm">
-                    {error}
+                    {error instanceof Error ? error.message : 'Error desconocido'}
                   </td>
                 </tr>
               )}
 
-              {!loading && !error && filteredQuotes.length === 0 && (
+              {!isLoading && !isError && filteredQuotes.length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-5 py-8 text-center text-[#94A3B8] text-sm">
                     No se encontraron cotizaciones con los filtros aplicados.
@@ -271,25 +224,29 @@ export default function QuotesList() {
                 </tr>
               )}
 
-              {!loading && !error && filteredQuotes.map((quote) => (
+              {!isLoading && !isError && filteredQuotes.map((quote) => (
                 <tr key={quote.id} className="group hover:bg-[#334155]/10 transition-colors">
-                  <td className="px-5 py-3.5 text-sm text-[#E2E8F0] font-medium">{quote.numero_correlativo}</td>
+                  <td className="px-5 py-3.5 text-sm text-[#E2E8F0] font-medium">COT-{quote.numero_correlativo}</td>
                   <td className="px-5 py-3.5 text-sm text-[#94A3B8]">{formatDate(quote.fecha_emision)}</td>
-                  <td className="px-5 py-3.5 text-sm text-[#E2E8F0]">{getClientName(quote.cliente)}</td>
-                  <td className="px-5 py-3.5 text-sm text-[#94A3B8]">{getSellerName(quote.vendedor)}</td>
+                  <td className="px-5 py-3.5 text-sm text-[#E2E8F0]">{getClientName(quote.clientes)}</td>
+                  <td className="px-5 py-3.5 text-sm text-[#94A3B8]">{getSellerName(quote.vendedores)}</td>
                   <td className="px-5 py-3.5 text-sm text-[#E2E8F0] font-medium text-right">{formatCurrency(quote.total_final)}</td>
                   <td className="px-5 py-3.5 text-sm uppercase">
                     <select 
                       value={quote.estado}
                       onChange={(e) => handleStatusChange(quote.id, e.target.value)}
                       className={`text-[10px] font-bold px-2 py-1 rounded-full border-none cursor-pointer focus:ring-1 focus:ring-blue-500 transition-colors
-                        ${quote.estado === 'Aprobada' ? 'bg-[#10B981]/10 text-[#10B981]' : 
-                          quote.estado === 'Por Revisar' ? 'bg-[#F59E0B]/10 text-[#F59E0B]' : 
-                          'bg-[#94A3B8]/10 text-[#94A3B8]'}`}
+                        ${quote.estado === 'Aprobada' || quote.estado === 'Enviada' ? 'bg-[#10B981]/10 text-[#10B981]' : 
+                          quote.estado === 'Por Revisar' || quote.estado === 'Generar PDF' ? 'bg-[#F59E0B]/10 text-[#F59E0B]' : 
+                          quote.estado === 'Borrador' ? 'bg-[#94A3B8]/10 text-[#94A3B8]' :
+                          'bg-[#EF4444]/10 text-[#EF4444]'}`}
                     >
                       <option value="Borrador" className="bg-[#181B21]">Borrador</option>
                       <option value="Por Revisar" className="bg-[#181B21]">Por Revisar</option>
                       <option value="Aprobada" className="bg-[#181B21]">Aprobada</option>
+                      <option value="Generar PDF" className="bg-[#181B21]">Generar PDF</option>
+                      <option value="Enviada" className="bg-[#181B21]">Enviada</option>
+                      <option value="Cancelada" className="bg-[#181B21]">Cancelada</option>
                     </select>
                   </td>
                   <td className="px-5 py-3.5 text-right flex items-center justify-end gap-2">
@@ -301,7 +258,7 @@ export default function QuotesList() {
                     </button>
                     <button 
                       onClick={() => handleDelete(quote.id)}
-                      disabled={saving}
+                      disabled={deleteMutation.isPending}
                       className="border border-red-500/50 text-red-500 text-xs font-medium px-2 py-1.5 rounded-md hover:bg-red-500/10 transition-colors disabled:opacity-50"
                       title="Eliminar"
                     >

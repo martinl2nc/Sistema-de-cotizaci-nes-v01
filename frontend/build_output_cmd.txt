@@ -1,0 +1,98 @@
+
+> frontend@0.0.0 build
+> tsc -b && vite build
+
+src/components/ui/Badge.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/features/clients/ClientFormModal.tsx(114,13): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/clients/ClientFormModal.tsx(114,77): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/products/CategoryDrawer.tsx(112,13): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/products/CategoryDrawer.tsx(112,97): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/products/CategoryDrawer.tsx(142,17): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/products/CategoryDrawer.tsx(142,85): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/products/CategoryDrawer.tsx(191,27): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/products/CategoryDrawer.tsx(191,111): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/products/CategoryDrawer.tsx(198,27): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/products/CategoryDrawer.tsx(198,111): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/products/CategoryDrawer.tsx(210,27): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/products/CategoryDrawer.tsx(210,102): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/products/CategoryDrawer.tsx(217,27): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/products/CategoryDrawer.tsx(217,114): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/products/ProductDrawer.tsx(90,13): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/products/ProductDrawer.tsx(90,97): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/products/ProductDrawer.tsx(146,19): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/products/ProductDrawer.tsx(146,101): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/sellers/SellerFormModal.tsx(93,13): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/sellers/SellerFormModal.tsx(93,77): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/sellers/SellersTab.tsx(53,15): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/sellers/SellersTab.tsx(53,93): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/sellers/SellersTab.tsx(69,13): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/sellers/SellersTab.tsx(69,93): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/sellers/SellersTab.tsx(135,25): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/sellers/SellersTab.tsx(135,98): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/sellers/SellersTab.tsx(143,25): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/features/sellers/SellersTab.tsx(143,110): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/layouts/Header.tsx(40,9): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/layouts/Header.tsx(40,83): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/layouts/Sidebar.tsx(31,13): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/layouts/Sidebar.tsx(31,96): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/layouts/Sidebar.tsx(42,13): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/layouts/Sidebar.tsx(42,91): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/admin/ClientsPage.tsx(109,17): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/admin/ClientsPage.tsx(109,95): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/admin/ClientsPage.tsx(126,15): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/admin/ClientsPage.tsx(126,95): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/admin/ClientsPage.tsx(187,27): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/admin/ClientsPage.tsx(187,100): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/admin/ClientsPage.tsx(195,27): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/admin/ClientsPage.tsx(195,112): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/admin/ComingSoonPage.tsx(15,13): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/admin/CompanyConfigPage.tsx(116,15): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/admin/CompanyConfigPage.tsx(116,78): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/admin/ProductsPage.tsx(87,15): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/admin/ProductsPage.tsx(87,89): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/admin/ProductsPage.tsx(103,15): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/admin/ProductsPage.tsx(103,76): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/admin/ProductsPage.tsx(110,15): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/admin/ProductsPage.tsx(110,83): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/admin/ProductsPage.tsx(190,25): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/admin/ProductsPage.tsx(190,98): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuoteForm.tsx(108,51): error TS2339: Property 'numero_correlativo' does not exist on type 'QuoteFormData'.
+src/pages/quotes/QuoteForm.tsx(109,33): error TS2339: Property 'numero_correlativo' does not exist on type 'QuoteFormData'.
+src/pages/quotes/QuoteForm.tsx(211,129): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuoteForm.tsx(211,215): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuoteForm.tsx(259,21): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuoteForm.tsx(259,82): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuoteForm.tsx(404,25): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuoteForm.tsx(404,97): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuoteForm.tsx(414,15): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuoteForm.tsx(414,76): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuoteForm.tsx(455,17): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuoteForm.tsx(455,83): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuoteForm.tsx(463,15): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuoteForm.tsx(463,74): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuoteForm.tsx(470,15): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuoteForm.tsx(470,86): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuotesList.tsx(123,11): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuotesList.tsx(123,91): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuotesList.tsx(145,15): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuotesList.tsx(145,99): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuotesList.tsx(164,15): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuotesList.tsx(164,99): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuotesList.tsx(172,13): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuotesList.tsx(172,91): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuotesList.tsx(204,23): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuotesList.tsx(204,109): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuotesList.tsx(265,23): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+src/pages/quotes/QuotesList.tsx(265,89): error TS2339: Property 'iconify-icon' does not exist on type 'JSX.IntrinsicElements'.
+vite.config.ts(24,11): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type '{ manualChunks: { vendor: string[]; router: string[]; supabase: string[]; }; }' is not assignable to type 'OutputOptions | OutputOptions[] | undefined'.
+      Types of property 'manualChunks' are incompatible.
+        Object literal may only specify known properties, and 'vendor' does not exist in type 'ManualChunksFunction'.
+          Object literal may only specify known properties, and 'compress' does not exist in type 'TerserOptions'.
+vite.config.ts(31,7): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Type '{ manualChunks: { vendor: string[]; router: string[]; supabase: string[]; }; }' is not assignable to type 'OutputOptions | OutputOptions[] | undefined'.
+      Types of property 'manualChunks' are incompatible.
+        Object literal may only specify known properties, and 'vendor' does not exist in type 'ManualChunksFunction'.
+          Object literal may only specify known properties, and 'compress' does not exist in type 'TerserOptions'.

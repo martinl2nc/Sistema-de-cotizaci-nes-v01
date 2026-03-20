@@ -5,6 +5,10 @@ import MainLayout from '@/layouts/MainLayout';
 // Lazy loading following Vite best practices
 const QuotesList = lazy(() => import('@/pages/quotes/QuotesList'));
 const QuoteForm = lazy(() => import('@/pages/quotes/QuoteForm'));
+const ClientsPage = lazy(() => import('@/pages/admin/ClientsPage'));
+const CompanyConfigPage = lazy(() => import('@/pages/admin/CompanyConfigPage'));
+const ProductsPage = lazy(() => import('@/pages/admin/ProductsPage'));
+const ComingSoonPage = lazy(() => import('@/pages/admin/ComingSoonPage'));
 
 function App() {
   return (
@@ -16,6 +20,13 @@ function App() {
             <Route index element={<QuotesList />} />
             <Route path="cotizaciones/nueva" element={<QuoteForm />} />
             <Route path="cotizaciones/editar/:id" element={<QuoteForm />} />
+
+            {/* Administration */}
+            <Route path="admin" element={<Navigate to="/admin/clientes" replace />} />
+            <Route path="admin/clientes" element={<ClientsPage />} />
+            <Route path="admin/empresa" element={<CompanyConfigPage />} />
+            <Route path="admin/productos" element={<ProductsPage />} />
+            <Route path="admin/vendedores" element={<ComingSoonPage />} />
             
             {/* Catch all to redirect home for now */}
             <Route path="*" element={<Navigate to="/" replace />} />

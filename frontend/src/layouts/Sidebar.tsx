@@ -4,7 +4,8 @@ export default function Sidebar() {
   const location = useLocation();
 
   const isActive = (path: string) => {
-    return location.pathname === path;
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
   };
 
   return (
