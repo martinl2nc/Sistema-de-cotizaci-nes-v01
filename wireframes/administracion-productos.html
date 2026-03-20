@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Administración del Sistema - Cotizador Pro</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"></head>
+<body class="bg-[#0F1115] text-[#E2E8F0] antialiased h-screen flex overflow-hidden selection:bg-[#3B82F6]/30 selection:text-white" style="font-family: 'Inter', sans-serif;">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-[#181B21] border-r border-[#334155] flex-shrink-0 flex flex-col justify-between hidden md:flex z-10 relative">
+        <div>
+            <!-- Logo -->
+            <div class="h-16 flex items-center px-6 border-b border-[#334155]">
+                <span class="text-lg font-semibold tracking-tighter text-[#E2E8F0]">COTIZADOR PRO</span>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="p-4 space-y-1">
+                <a href="#" class="flex items-center gap-3 px-3 py-2 text-[#94A3B8] hover:text-[#E2E8F0] hover:bg-[#334155]/40 rounded-md text-sm font-medium transition-colors">
+                    <iconify-icon icon="solar:document-text-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                    Cotizaciones
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 bg-[#3B82F6] text-white rounded-md text-sm font-medium transition-colors shadow-sm">
+                    <iconify-icon icon="solar:settings-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                    Administración
+                </a>
+            </nav>
+        </div>
+
+        <!-- User Profile -->
+        <div class="p-4 border-t border-[#334155]">
+            <div class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-[#334155]/40 transition-colors cursor-pointer">
+                <div class="w-8 h-8 rounded-full bg-[#3B82F6]/20 text-[#3B82F6] flex items-center justify-center font-semibold text-xs border border-[#3B82F6]/30">
+                    AD
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-[#E2E8F0] truncate">Admin Usuario</p>
+                    <p class="text-xs text-[#94A3B8] truncate">admin@empresa.com</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative">
+        
+        <!-- Top Header -->
+        <header class="flex flex-shrink-0 bg-[#0F1115] h-16 border-[#334155] border-b pr-6 pl-6 items-center justify-between">
+            <div class="flex items-center gap-2 text-sm text-[#94A3B8]">
+                <span class="hover:text-[#E2E8F0] cursor-pointer transition-colors">Inicio</span>
+                <span class="text-[#334155]">/</span>
+                <span class="hover:text-[#E2E8F0] cursor-pointer transition-colors">Administración</span>
+                <span class="text-[#334155]">/</span>
+                <span class="text-[#E2E8F0] font-medium">Productos</span>
+            </div>
+            
+            <button class="relative p-2 text-[#94A3B8] hover:text-[#E2E8F0] transition-colors rounded-full hover:bg-[#334155]/40 focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-2 focus:ring-offset-[#0F1115]">
+                <iconify-icon icon="solar:bell-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
+                <span class="absolute top-2 right-2.5 w-2 h-2 bg-[#3B82F6] rounded-full ring-2 ring-[#0F1115]"></span>
+            </button>
+        </header>
+
+        <!-- Scrollable Main Content -->
+        <main class="flex-1 overflow-y-auto p-6 space-y-6">
+            
+            <!-- Page Header & Tabs -->
+            <div class="space-y-4">
+                <h1 class="text-2xl font-semibold tracking-tight text-[#E2E8F0]">Administración del Sistema</h1>
+                
+                <!-- Tabs -->
+                <div class="border-b border-[#334155]">
+                    <nav class="-mb-px flex space-x-8">
+                        <a href="#" class="border-[#3B82F6] text-[#E2E8F0] whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm">
+                            Productos y Categorías
+                        </a>
+                        <a href="#" class="border-transparent text-[#94A3B8] hover:text-[#E2E8F0] hover:border-[#334155] whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors">
+                            Configuración de Empresa
+                        </a>
+                        <a href="#" class="border-transparent text-[#94A3B8] hover:text-[#E2E8F0] hover:border-[#334155] whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors">
+                            Clientes y Vendedores
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Management Panel -->
+            <div class="bg-[#181B21] border border-[#334155] rounded-xl shadow-sm flex flex-col">
+                
+                <!-- Toolbar: Search & Action -->
+                <div class="p-4 border-b border-[#334155] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div class="relative w-full sm:max-w-md">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <iconify-icon icon="solar:magnifer-linear" class="text-[#94A3B8] text-lg"></iconify-icon>
+                        </div>
+                        <input type="text" placeholder="Buscar Producto..." class="block w-full bg-[#0F1115] border border-[#334155] rounded-lg pl-10 pr-3 py-2 text-sm text-[#E2E8F0] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-shadow">
+                    </div>
+                    
+                    <button class="w-full sm:w-auto flex justify-center items-center gap-2 bg-[#3B82F6] hover:bg-[#2563EB] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-2 focus:ring-offset-[#181B21]">
+                        <iconify-icon icon="solar:add-circle-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                        Nuevo Producto
+                    </button>
+                </div>
+
+                <!-- Data Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-[#0F1115] border-b border-[#334155]">
+                                <th class="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider">SKU</th>
+                                <th class="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Nombre</th>
+                                <th class="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Categoría</th>
+                                <th class="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider text-right">Precio Base</th>
+                                <th class="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider text-center">Estado</th>
+                                <th class="py-3 px-6 w-[60px]"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-[#334155]">
+                            <!-- Row 1 -->
+                            <tr class="bg-[#334155]/20 hover:bg-[#334155]/30 transition-colors group">
+                                <td class="py-4 px-6 text-sm font-medium text-[#E2E8F0]">SKU-0012</td>
+                                <td class="py-4 px-6 text-sm text-[#E2E8F0]">Licencia Anual Software Premium</td>
+                                <td class="py-4 px-6">
+                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-[#334155] text-[#E2E8F0]">
+                                        Software
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6 text-sm text-[#E2E8F0] text-right">S/ 1,500.00</td>
+                                <td class="py-4 px-6 text-center">
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer" checked="">
+                                        <div class="w-9 h-5 bg-[#334155] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#3B82F6]"></div>
+                                    </label>
+                                </td>
+                                <td class="py-4 px-6 text-right">
+                                    <button class="text-[#3B82F6] p-1.5 rounded hover:bg-[#3B82F6]/10 transition-colors focus:outline-none">
+                                        <iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-lg block"></iconify-icon>
+                                    </button>
+                                </td>
+                            </tr>
+                            
+                            <!-- Row 2 -->
+                            <tr class="hover:bg-[#334155]/10 transition-colors group">
+                                <td class="py-4 px-6 text-sm font-medium text-[#E2E8F0]">SKU-0015</td>
+                                <td class="py-4 px-6 text-sm text-[#E2E8F0]">Soporte Técnico Mensual 24/7</td>
+                                <td class="py-4 px-6">
+                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-[#334155] text-[#E2E8F0]">
+                                        Servicios
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6 text-sm text-[#E2E8F0] text-right">S/ 850.00</td>
+                                <td class="py-4 px-6 text-center">
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer" checked="">
+                                        <div class="w-9 h-5 bg-[#334155] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#3B82F6]"></div>
+                                    </label>
+                                </td>
+                                <td class="py-4 px-6 text-right">
+                                    <button class="text-[#94A3B8] hover:text-[#3B82F6] p-1.5 rounded hover:bg-[#334155]/40 transition-colors focus:outline-none opacity-0 group-hover:opacity-100">
+                                        <iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-lg block"></iconify-icon>
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Row 3 (Inactive) -->
+                            <tr class="hover:bg-[#334155]/10 transition-colors group">
+                                <td class="py-4 px-6 text-sm font-medium text-[#94A3B8]">SKU-0042</td>
+                                <td class="py-4 px-6 text-sm text-[#94A3B8]">Implementación Básica</td>
+                                <td class="py-4 px-6">
+                                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-[#334155] text-[#94A3B8]">
+                                        Implementación
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6 text-sm text-[#94A3B8] text-right">S/ 500.00</td>
+                                <td class="py-4 px-6 text-center">
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer">
+                                        <div class="w-9 h-5 bg-[#334155] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#3B82F6]"></div>
+                                    </label>
+                                </td>
+                                <td class="py-4 px-6 text-right">
+                                    <button class="text-[#94A3B8] hover:text-[#3B82F6] p-1.5 rounded hover:bg-[#334155]/40 transition-colors focus:outline-none opacity-0 group-hover:opacity-100">
+                                        <iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-lg block"></iconify-icon>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Spacer -->
+            <div class="h-8"></div>
+        </main>
+    </div>
+
+    <!-- Backdrop Overlay for Drawer -->
+    <div class="fixed transition-opacity z-40 bg-[#0F1115]/50 top-0 right-0 bottom-0 left-0"></div>
+
+    <!-- Slide-over / Drawer Panel -->
+    <div class="fixed inset-y-0 right-0 z-50 w-full max-w-[400px] bg-[#181B21] border-l border-[#334155] shadow-[-20px_0_50px_rgba(0,0,0,0.8)] flex flex-col transform transition-transform duration-300 ease-in-out">
+        
+        <!-- Drawer Header -->
+        <div class="flex items-center justify-between px-6 py-5 border-b border-[#334155] bg-[#181B21]">
+            <h2 class="text-lg font-semibold tracking-tight text-[#E2E8F0]">Editar Producto</h2>
+            <button class="hover:text-[#E2E8F0] hover:bg-[#334155]/40 transition-colors focus:outline-none focus:ring-2 focus:ring-[#3B82F6] text-[#94A3B8] rounded-md pt-1.5 pr-1.5 pb-1.5 pl-1.5 cursor-pointer" onclick="window.location.href='administracion-prductos-crear.html'" role="button">
+                <iconify-icon icon="solar:close-circle-linear" stroke-width="1.5" class="text-xl block"></iconify-icon>
+            </button>
+        </div>
+
+        <!-- Drawer Body (Form) -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+            
+            <!-- Input: SKU -->
+            <div class="">
+                <label class="block text-xs font-medium text-[#94A3B8] mb-1.5">SKU</label>
+                <input type="text" value="SKU-0012" class="block w-full bg-[#0F1115] border border-[#334155] rounded-lg px-3 py-2.5 text-sm text-[#E2E8F0] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-shadow">
+            </div>
+
+            <!-- Input: Nombre -->
+            <div class="">
+                <label class="block text-xs font-medium text-[#94A3B8] mb-1.5">Nombre</label>
+                <input type="text" value="Licencia Anual Software Premium" class="block w-full bg-[#0F1115] border border-[#334155] rounded-lg px-3 py-2.5 text-sm text-[#E2E8F0] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-shadow">
+            </div>
+
+            <!-- Select/Input: Categoría -->
+            <div class="">
+                <label class="block text-xs font-medium text-[#94A3B8] mb-1.5">Categoría</label>
+                <div class="relative">
+                    <button type="button" class="w-full bg-[#0F1115] border border-[#334155] rounded-lg text-sm text-[#E2E8F0] px-3 py-2.5 flex items-center justify-between focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-shadow shadow-sm">
+                        <span class="truncate">Software</span>
+                        <iconify-icon icon="solar:alt-arrow-down-linear" class="text-[#94A3B8] text-base ml-2 flex-shrink-0"></iconify-icon>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Input: Precio Base -->
+            <div class="">
+                <label class="block text-xs font-medium text-[#94A3B8] mb-1.5">Precio Base</label>
+                <div class="relative rounded-lg shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="text-[#94A3B8] text-sm font-medium">S/</span>
+                    </div>
+                    <input type="text" value="1500.00" class="block w-full bg-[#0F1115] border border-[#334155] rounded-lg pl-8 pr-3 py-2.5 text-sm text-[#E2E8F0] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-shadow">
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Drawer Footer -->
+        <div class="p-6 border-t border-[#334155] bg-[#181B21]">
+            <button class="hover:bg-[#2563EB] transition-colors focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-2 focus:ring-offset-[#181B21] text-sm font-medium text-white bg-[#3B82F6] w-full rounded-lg pt-2.5 pr-4 pb-2.5 pl-4 shadow-sm cursor-pointer" onclick="window.location.href='administracion-prductos-crear.html'" role="button">
+                Guardar Cambios
+            </button>
+        </div>
+
+    </div>
+
+
+</body></html>

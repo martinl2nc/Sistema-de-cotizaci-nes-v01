@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - Cotizador Pro</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"></head>
+<body class="bg-[#0F1115] text-[#E2E8F0] antialiased h-screen flex overflow-hidden selection:bg-[#3B82F6]/30 selection:text-white" style="font-family: 'Inter', sans-serif;">
+
+    <!-- Sidebar -->
+    <aside class="flex-shrink-0 flex flex-col hidden md:flex bg-[#181B21] w-[250px] border-[#334155] border-r justify-between">
+        <div class="">
+            <!-- Logo -->
+            <div class="h-16 flex items-center px-6 border-b border-[#334155]">
+                <span class="text-xl font-semibold tracking-tight text-[#E2E8F0]">COTIZADOR<span class="text-[#3B82F6]">PRO</span></span>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="p-4 space-y-1">
+                <a href="#" class="flex items-center gap-3 px-3 py-2 bg-[#3B82F6] text-white rounded-md text-sm font-medium transition-colors shadow-sm">
+                    <iconify-icon icon="solar:document-text-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                    Cotizaciones
+                </a>
+                <a href="administracion-productos.html" class="flex items-center gap-3 hover:text-[#E2E8F0] hover:bg-[#334155]/40 transition-colors text-sm font-medium text-[#94A3B8] rounded-md pt-2 pr-3 pb-2 pl-3">
+                    <iconify-icon icon="solar:settings-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                    Administración
+                </a>
+            </nav>
+        </div>
+
+        <!-- User Profile -->
+        <div class="p-4 border-t border-[#334155]">
+            <div class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-[#334155]/40 transition-colors cursor-pointer">
+                <div class="w-8 h-8 rounded-full bg-[#3B82F6]/20 text-[#3B82F6] flex items-center justify-center font-semibold text-xs border border-[#3B82F6]/30">
+                    AD
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-[#E2E8F0] truncate">Admin Usuario</p>
+                    <p class="text-xs text-[#94A3B8] truncate">admin@empresa.com</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+        
+        <!-- Top Header -->
+        <header class="h-16 bg-[#0F1115] border-b border-[#334155] flex items-center justify-between px-6 flex-shrink-0">
+            <div class="flex items-center gap-2 text-sm text-[#94A3B8]">
+                <span class="hover:text-[#E2E8F0] cursor-pointer transition-colors">Inicio</span>
+                <span class="text-[#334155]">/</span>
+                <span class="text-[#E2E8F0] font-medium">Cotizaciones</span>
+            </div>
+            
+            <button class="relative p-2 text-[#94A3B8] hover:text-[#E2E8F0] transition-colors rounded-full hover:bg-[#334155]/40 focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-2 focus:ring-offset-[#0F1115]">
+                <iconify-icon icon="solar:bell-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
+                <span class="absolute top-2 right-2.5 w-2 h-2 bg-[#3B82F6] rounded-full ring-2 ring-[#0F1115]"></span>
+            </button>
+        </header>
+
+        <!-- Page Content -->
+        <main class="flex-1 overflow-y-auto p-6 flex flex-col">
+            
+            <div class="max-w-7xl w-full mx-auto flex flex-col h-full">
+                
+                <!-- Page Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <h1 class="text-2xl font-semibold tracking-tight text-[#E2E8F0]">Gestor de Cotizaciones</h1>
+                    
+                    <button class="hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-2 focus:ring-offset-[#0F1115] flex gap-2 text-sm font-medium text-white bg-[#3B82F6] rounded-md pt-2 pr-4 pb-2 pl-4 shadow-sm gap-x-2 gap-y-2 items-center justify-center cursor-pointer" onclick="window.location.href='crear-cotizaci-n.html'" role="button">
+                        <iconify-icon icon="solar:add-circle-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                        Crear Cotización
+                    </button>
+                </div>
+
+                <!-- Filters Bar -->
+                <div class="bg-[#181B21] border border-[#334155] rounded-lg p-4 mb-6 shadow-sm flex flex-col lg:flex-row gap-4">
+                    
+                    <!-- Dropdowns & DatePicker -->
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <div class="relative group">
+                            <select class="appearance-none w-full sm:w-44 bg-[#0F1115] border border-[#334155] rounded-md py-2 pl-3 pr-10 text-sm text-[#E2E8F0] shadow-sm focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors cursor-pointer">
+                                <option value="" disabled="" selected="" hidden="">Por Vendedor</option>
+                                <option value="todos">Todos los vendedores</option>
+                                <option value="maria">María Gómez</option>
+                                <option value="carlos">Carlos Ruiz</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#94A3B8] group-hover:text-[#E2E8F0] transition-colors">
+                                <iconify-icon icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                            </div>
+                        </div>
+
+                        <div class="relative group">
+                            <select class="appearance-none w-full sm:w-44 bg-[#0F1115] border border-[#334155] rounded-md py-2 pl-3 pr-10 text-sm text-[#E2E8F0] shadow-sm focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors cursor-pointer">
+                                <option value="" disabled="" selected="" hidden="">Por Estado</option>
+                                <option value="todos">Todos los estados</option>
+                                <option value="revision">Por Revisar</option>
+                                <option value="enviada">Enviada</option>
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#94A3B8] group-hover:text-[#E2E8F0] transition-colors">
+                                <iconify-icon icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                            </div>
+                        </div>
+
+                        <!-- DatePicker Mockup -->
+                        <div class="relative group">
+                            <button type="button" class="w-full sm:w-48 bg-[#0F1115] border border-[#334155] rounded-md py-2 px-3 text-sm text-[#E2E8F0] shadow-sm focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors flex items-center justify-between">
+                                <span class="flex items-center gap-2">
+                                    <iconify-icon icon="solar:calendar-linear" stroke-width="1.5" class="text-[#94A3B8] text-base"></iconify-icon>
+                                    Rango de fechas
+                                </span>
+                                <iconify-icon icon="solar:alt-arrow-down-linear" stroke-width="1.5" class="text-[#94A3B8] group-hover:text-[#E2E8F0] text-lg transition-colors"></iconify-icon>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Search Input -->
+                    <div class="relative flex-1">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-[#94A3B8]">
+                            <iconify-icon icon="solar:magnifer-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                        </div>
+                        <input type="text" placeholder="Buscar por RUC o Nombre..." class="w-full bg-[#0F1115] border border-[#334155] rounded-md py-2 pl-10 pr-4 text-sm text-[#E2E8F0] placeholder-[#94A3B8]/60 shadow-sm focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-colors">
+                    </div>
+                </div>
+
+                <!-- Data Grid -->
+                <div class="bg-[#181B21] border border-[#334155] rounded-lg overflow-hidden flex flex-col shadow-sm mb-6 flex-1">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[1000px]">
+                            <thead>
+                                <tr class="border-b border-[#334155] bg-[#0F1115]">
+                                    <th class="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[100px]">ID</th>
+                                    <th class="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[120px]">Fecha</th>
+                                    <th class="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase">Cliente</th>
+                                    <th class="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[160px]">Vendedor</th>
+                                    <th class="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[120px] text-right">Total</th>
+                                    <th class="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[140px]">Estado</th>
+                                    <th class="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[200px] text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-[#334155] bg-[#181B21]">
+                                
+                                <!-- Row 1 -->
+                                <tr class="group hover:bg-[#334155]/10 transition-colors">
+                                    <td class="px-5 py-3.5 text-sm text-[#E2E8F0] font-medium">COT-0015</td>
+                                    <td class="px-5 py-3.5 text-sm text-[#94A3B8]">24 Oct, 2023</td>
+                                    <td class="px-5 py-3.5 text-sm text-[#E2E8F0]">TechSolutions SAC</td>
+                                    <td class="px-5 py-3.5 text-sm text-[#94A3B8]">María Gómez</td>
+                                    <td class="px-5 py-3.5 text-sm text-[#E2E8F0] font-medium text-right">S/ 11,564.00</td>
+                                    <td class="px-5 py-3.5 text-sm">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20">
+                                            Por Revisar
+                                        </span>
+                                    </td>
+                                    <td class="px-5 py-3.5 text-right">
+                                        <button class="border border-[#334155] text-white text-xs font-medium px-3 py-1.5 rounded-md hover:bg-[#334155]/50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-1 focus:ring-offset-[#181B21] whitespace-nowrap">
+                                            Abrir / Editar Cotización
+                                        </button>
+                                    </td>
+                                </tr>
+
+                                <!-- Row 2 -->
+                                <tr class="group hover:bg-[#334155]/10 transition-colors">
+                                    <td class="px-5 py-3.5 text-sm text-[#E2E8F0] font-medium">COT-0014</td>
+                                    <td class="px-5 py-3.5 text-sm text-[#94A3B8]">24 Oct, 2023</td>
+                                    <td class="px-5 py-3.5 text-sm text-[#E2E8F0]">Inversiones ABC (RUC: 20123456789)</td>
+                                    <td class="px-5 py-3.5 text-sm text-[#94A3B8]">Carlos Ruiz</td>
+                                    <td class="px-5 py-3.5 text-sm text-[#E2E8F0] font-medium text-right">S/ 4,200.50</td>
+                                    <td class="px-5 py-3.5 text-sm">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/20">
+                                            Enviada
+                                        </span>
+                                    </td>
+                                    <td class="px-5 py-3.5 text-right">
+                                        <button class="border border-[#334155] text-white text-xs font-medium px-3 py-1.5 rounded-md hover:bg-[#334155]/50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-1 focus:ring-offset-[#181B21] whitespace-nowrap">
+                                            Abrir / Editar Cotización
+                                        </button>
+                                    </td>
+                                </tr>
+
+                                <!-- Row 3 -->
+                                <tr class="group hover:bg-[#334155]/10 transition-colors">
+                                    <td class="px-5 py-3.5 text-sm text-[#E2E8F0] font-medium">COT-0013</td>
+                                    <td class="px-5 py-3.5 text-sm text-[#94A3B8]">23 Oct, 2023</td>
+                                    <td class="px-5 py-3.5 text-sm text-[#E2E8F0]">Logística del Norte EIRL</td>
+                                    <td class="px-5 py-3.5 text-sm text-[#94A3B8]">María Gómez</td>
+                                    <td class="px-5 py-3.5 text-sm text-[#E2E8F0] font-medium text-right">S/ 8,950.00</td>
+                                    <td class="px-5 py-3.5 text-sm">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/20">
+                                            Enviada
+                                        </span>
+                                    </td>
+                                    <td class="px-5 py-3.5 text-right">
+                                        <button class="border border-[#334155] text-white text-xs font-medium px-3 py-1.5 rounded-md hover:bg-[#334155]/50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-1 focus:ring-offset-[#181B21] whitespace-nowrap">
+                                            Abrir / Editar Cotización
+                                        </button>
+                                    </td>
+                                </tr>
+
+                                 <!-- Row 4 -->
+                                 <tr class="group hover:bg-[#334155]/10 transition-colors">
+                                    <td class="px-5 py-3.5 text-sm text-[#E2E8F0] font-medium">COT-0012</td>
+                                    <td class="px-5 py-3.5 text-sm text-[#94A3B8]">22 Oct, 2023</td>
+                                    <td class="px-5 py-3.5 text-sm text-[#E2E8F0]">Constructora Horizonte SA</td>
+                                    <td class="px-5 py-3.5 text-sm text-[#94A3B8]">Carlos Ruiz</td>
+                                    <td class="px-5 py-3.5 text-sm text-[#E2E8F0] font-medium text-right">S/ 24,100.00</td>
+                                    <td class="px-5 py-3.5 text-sm">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20">
+                                            Por Revisar
+                                        </span>
+                                    </td>
+                                    <td class="px-5 py-3.5 text-right">
+                                        <button class="border border-[#334155] text-white text-xs font-medium px-3 py-1.5 rounded-md hover:bg-[#334155]/50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-1 focus:ring-offset-[#181B21] whitespace-nowrap">
+                                            Abrir / Editar Cotización
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Row 5 -->
+                                <tr class="group hover:bg-[#334155]/10 transition-colors">
+                                    <td class="px-5 py-3.5 text-sm text-[#E2E8F0] font-medium">COT-0011</td>
+                                    <td class="px-5 py-3.5 text-sm text-[#94A3B8]">21 Oct, 2023</td>
+                                    <td class="px-5 py-3.5 text-sm text-[#E2E8F0]">Estudio Jurídico Silva &amp; Asociados</td>
+                                    <td class="px-5 py-3.5 text-sm text-[#94A3B8]">María Gómez</td>
+                                    <td class="px-5 py-3.5 text-sm text-[#E2E8F0] font-medium text-right">S/ 1,250.00</td>
+                                    <td class="px-5 py-3.5 text-sm">
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/20">
+                                            Enviada
+                                        </span>
+                                    </td>
+                                    <td class="px-5 py-3.5 text-right">
+                                        <button class="border border-[#334155] text-white text-xs font-medium px-3 py-1.5 rounded-md hover:bg-[#334155]/50 transition-colors focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-1 focus:ring-offset-[#181B21] whitespace-nowrap">
+                                            Abrir / Editar Cotización
+                                        </button>
+                                    </td>
+                                </tr>
+
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination Footer -->
+                    <div class="p-4 border-t border-[#334155] bg-[#0F1115]/30 flex items-center justify-between">
+                        <span class="text-xs text-[#94A3B8]">Mostrando <span class="text-[#E2E8F0] font-medium">1 a 5</span> de <span class="text-[#E2E8F0] font-medium">24</span> resultados</span>
+                        
+                        <div class="flex items-center gap-2">
+                            <button class="px-3 py-1.5 text-xs font-medium text-[#94A3B8] bg-[#0F1115] border border-[#334155] rounded-md hover:text-[#E2E8F0] hover:bg-[#334155]/40 transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed" disabled="">
+                                Anterior
+                            </button>
+                            <button class="px-3 py-1.5 text-xs font-medium text-[#94A3B8] bg-[#0F1115] border border-[#334155] rounded-md hover:text-[#E2E8F0] hover:bg-[#334155]/40 transition-colors focus:outline-none">
+                                Siguiente
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+</body></html>

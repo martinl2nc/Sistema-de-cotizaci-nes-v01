@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editor de Cotizaciones - Cotizador Pro</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&amp;display=swap" rel="stylesheet"></head>
+<body class="bg-[#0F1115] text-[#E2E8F0] antialiased h-screen flex overflow-hidden selection:bg-[#3B82F6]/30 selection:text-white" style="font-family: 'Inter', sans-serif;">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-[#181B21] border-r border-[#334155] flex-shrink-0 flex flex-col justify-between hidden md:flex z-20">
+        <div>
+            <!-- Logo -->
+            <div class="h-16 flex items-center px-6 border-b border-[#334155]">
+                <span class="text-xl font-medium tracking-tight text-[#E2E8F0]">COTIZADOR<span class="text-[#3B82F6]">PRO</span></span>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="p-4 space-y-1">
+                <a href="#" class="flex items-center gap-3 px-3 py-2 bg-[#3B82F6] text-white rounded-md text-sm font-medium transition-colors shadow-sm">
+                    <iconify-icon icon="solar:document-text-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                    Cotizaciones
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 text-[#94A3B8] hover:text-[#E2E8F0] hover:bg-[#334155]/40 rounded-md text-sm font-medium transition-colors">
+                    <iconify-icon icon="solar:settings-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                    Administración
+                </a>
+            </nav>
+        </div>
+
+        <!-- User Profile -->
+        <div class="p-4 border-t border-[#334155]">
+            <div class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-[#334155]/40 transition-colors cursor-pointer">
+                <div class="w-8 h-8 rounded-full bg-[#3B82F6]/20 text-[#3B82F6] flex items-center justify-center font-medium text-xs border border-[#3B82F6]/30">
+                    AD
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-[#E2E8F0] truncate">Admin Usuario</p>
+                    <p class="text-xs text-[#94A3B8] truncate">admin@empresa.com</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        
+        <!-- Top Header -->
+        <header class="flex flex-shrink-0 bg-[#0F1115] h-16 border-[#334155] border-b pr-6 pl-6 items-center justify-between z-10 relative">
+            <div class="flex items-center gap-2 text-sm text-[#94A3B8]">
+                <span class="hover:text-[#E2E8F0] cursor-pointer transition-colors">Inicio</span>
+                <span class="text-[#334155]">/</span>
+                <span class="hover:text-[#E2E8F0] cursor-pointer transition-colors">Cotizaciones</span>
+                <span class="text-[#334155]">/</span>
+                <span class="text-[#E2E8F0] font-medium">Editar COT-0015</span>
+            </div>
+            
+            <button class="relative p-2 text-[#94A3B8] hover:text-[#E2E8F0] transition-colors rounded-full hover:bg-[#334155]/40 focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-2 focus:ring-offset-[#0F1115]">
+                <iconify-icon icon="solar:bell-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
+                <span class="absolute top-2 right-2.5 w-2 h-2 bg-[#3B82F6] rounded-full ring-2 ring-[#0F1115]"></span>
+            </button>
+        </header>
+
+        <!-- Scrollable Main Content -->
+        <main class="flex-1 overflow-y-auto p-6 space-y-6">
+            
+            <!-- Page Header -->
+            <div class="flex items-center gap-3">
+                <h1 class="text-2xl font-medium tracking-tight text-[#E2E8F0]">Editando: COT-0015</h1>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20">
+                    Por Revisar
+                </span>
+            </div>
+
+            <!-- Top Panel: Master Data -->
+            <div class="bg-[#181B21] border border-[#334155] rounded-xl p-6 shadow-sm">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    
+                    <!-- Left Column -->
+                    <div class="space-y-5">
+                        <!-- Custom Dropdown: Cliente -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="block text-xs font-medium text-[#94A3B8]">Cliente</label>
+                                <button type="button" class="text-xs font-medium text-[#3B82F6] hover:text-[#60A5FA] px-2 py-0.5 rounded hover:bg-[#3B82F6]/10 transition-colors focus:outline-none flex items-center gap-1">
+                                    <iconify-icon icon="solar:add-circle-linear" class="text-sm"></iconify-icon>
+                                    Nuevo
+                                </button>
+                            </div>
+                            <div class="relative">
+                                <button type="button" class="w-full bg-[#0F1115] border border-[#334155] rounded-lg text-sm text-[#94A3B8] px-3 py-2.5 flex items-center justify-between focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-shadow shadow-sm">
+                                    <span class="truncate">Seleccionar Cliente (RUC/Nombre)</span>
+                                    <iconify-icon icon="solar:alt-arrow-down-linear" class="text-[#94A3B8] text-base ml-2 flex-shrink-0"></iconify-icon>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Custom Dropdown: Vendedor -->
+                        <div>
+                            <label class="block text-xs font-medium text-[#94A3B8] mb-1.5">Vendedor</label>
+                            <div class="relative">
+                                <button type="button" class="w-full bg-[#0F1115] border border-[#334155] rounded-lg text-sm text-[#94A3B8] px-3 py-2.5 flex items-center justify-between focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-shadow shadow-sm">
+                                    <span class="truncate">Vendedor Asignado</span>
+                                    <iconify-icon icon="solar:alt-arrow-down-linear" class="text-[#94A3B8] text-base ml-2 flex-shrink-0"></iconify-icon>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="space-y-5">
+                        <!-- Toggle IGV -->
+                        <div class="flex items-center justify-between pt-1">
+                            <span class="text-sm font-medium text-[#E2E8F0]">Aplicar IGV 18%</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer" checked="">
+                                <div class="w-11 h-6 bg-[#334155] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#3B82F6]"></div>
+                            </label>
+                        </div>
+
+                        <!-- Input: Descuento General -->
+                        <div>
+                            <label class="block text-xs font-medium text-[#94A3B8] mb-1.5">Descuento General (S/)</label>
+                            <div class="relative rounded-lg shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span class="text-[#94A3B8] sm:text-sm font-medium">S/</span>
+                                </div>
+                                <input type="text" value="0.00" class="block w-full bg-[#0F1115] border border-[#334155] rounded-lg pl-8 pr-3 py-2.5 text-sm text-[#E2E8F0] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-shadow">
+                            </div>
+                        </div>
+
+                        <!-- Textarea: Observaciones -->
+                        <div>
+                            <label class="block text-xs font-medium text-[#94A3B8] mb-1.5">Observaciones</label>
+                            <textarea rows="3" placeholder="Notas internas o condiciones especiales..." class="block w-full bg-[#0F1115] border border-[#334155] rounded-lg px-3 py-2.5 text-sm text-[#E2E8F0] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-shadow resize-none"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Panel: Detail Data -->
+            <div class="bg-[#181B21] border border-[#334155] rounded-xl overflow-hidden shadow-sm flex flex-col">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-[#0F1115] border-b border-[#334155]">
+                                <th class="py-3 px-4 text-xs font-medium text-[#94A3B8] uppercase tracking-wider w-[220px]">Selector de Producto</th>
+                                <th class="py-3 px-4 text-xs font-medium text-[#94A3B8] uppercase tracking-wider min-w-[250px]">Nombre del Ítem</th>
+                                <th class="py-3 px-4 text-xs font-medium text-[#94A3B8] uppercase tracking-wider w-[100px]">Cantidad</th>
+                                <th class="py-3 px-4 text-xs font-medium text-[#94A3B8] uppercase tracking-wider w-[140px]">Precio Unitario</th>
+                                <th class="py-3 px-4 text-xs font-medium text-[#94A3B8] uppercase tracking-wider w-[130px]">Desc. Línea</th>
+                                <th class="py-3 px-4 text-xs font-medium text-[#94A3B8] uppercase tracking-wider w-[120px] text-right">Subtotal</th>
+                                <th class="py-3 px-4 w-[50px]"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-[#334155]">
+                            <!-- Row 1 -->
+                            <tr class="hover:bg-[#334155]/10 transition-colors group">
+                                <td class="py-3 px-4">
+                                    <div class="relative">
+                                        <button type="button" class="w-full bg-[#0F1115] border border-[#334155] rounded shadow-sm text-sm text-[#94A3B8] px-2.5 py-1.5 flex items-center justify-between focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6]">
+                                            <span class="truncate">Seleccionar o escribir...</span>
+                                            <iconify-icon icon="solar:alt-arrow-down-linear" class="text-[#94A3B8] text-sm ml-1 flex-shrink-0"></iconify-icon>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-4">
+                                    <input type="text" placeholder="Descripción del ítem" class="block w-full bg-[#0F1115] border border-[#334155] rounded shadow-sm px-2.5 py-1.5 text-sm text-[#E2E8F0] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6]">
+                                </td>
+                                <td class="py-3 px-4">
+                                    <input type="number" placeholder="0" class="block w-full bg-[#0F1115] border border-[#334155] rounded shadow-sm px-2.5 py-1.5 text-sm text-[#E2E8F0] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] text-center">
+                                </td>
+                                <td class="py-3 px-4">
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                                            <span class="text-[#94A3B8] text-sm">S/</span>
+                                        </div>
+                                        <input type="number" value="1250.00" class="block w-full bg-[#0F1115] border border-[#3B82F6]/50 rounded shadow-sm pl-7 pr-2.5 py-1.5 text-sm text-[#E2E8F0] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] text-right">
+                                    </div>
+                                </td>
+                                <td class="py-3 px-4">
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                                            <span class="text-[#94A3B8] text-sm">S/</span>
+                                        </div>
+                                        <input type="number" placeholder="0.00" class="block w-full bg-[#0F1115] border border-[#334155] rounded shadow-sm pl-7 pr-2.5 py-1.5 text-sm text-[#E2E8F0] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] text-right">
+                                    </div>
+                                </td>
+                                <td class="py-3 px-4">
+                                    <div class="text-sm font-medium text-[#94A3B8] text-right pt-1.5 cursor-not-allowed">0.00</div>
+                                </td>
+                                <td class="py-3 px-4 text-center">
+                                    <button class="text-[#EF4444]/80 hover:text-[#EF4444] transition-colors p-1.5 rounded hover:bg-[#EF4444]/10 focus:outline-none focus:ring-2 focus:ring-[#EF4444]/50">
+                                        <iconify-icon icon="solar:trash-bin-trash-linear" stroke-width="1.5" class="text-lg block"></iconify-icon>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Add Row Button Area -->
+                <div class="p-4 border-t border-[#334155] bg-[#181B21]">
+                    <button class="flex items-center gap-2 text-sm font-medium text-[#3B82F6] hover:text-[#60A5FA] px-2 py-1.5 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/50">
+                        <iconify-icon icon="solar:add-circle-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                        Añadir Fila
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Spacer -->
+            <div class="h-20 sm:h-28"></div>
+        </main>
+
+        <!-- Fixed Footer Panel: Totals & Actions -->
+        <footer class="flex-shrink-0 bg-[#181B21] border-t border-[#334155] p-6 shadow-[0_-4px_15px_rgba(0,0,0,0.2)] z-10">
+            <div class="flex flex-col items-end w-full">
+                
+                <!-- Totals -->
+                <div class="w-full sm:w-80 space-y-3 mb-6">
+                    <div class="flex justify-between items-center text-sm text-[#94A3B8]">
+                        <span>Subtotal</span>
+                        <span class="font-medium text-[#E2E8F0]">S/ 0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm text-[#94A3B8]">
+                        <span>Descuento Global</span>
+                        <span class="font-medium text-[#EF4444]">- S/ 0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm text-[#94A3B8]">
+                        <span>IGV (18%)</span>
+                        <span class="font-medium text-[#E2E8F0]">S/ 0.00</span>
+                    </div>
+                    <div class="h-px bg-[#334155] w-full my-3"></div>
+                    <div class="flex justify-between items-end">
+                        <span class="text-sm font-medium text-[#94A3B8] pb-1.5">Total Final</span>
+                        <span class="text-4xl font-medium tracking-tight text-[#E2E8F0]">S/ 0.00</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex w-full sm:w-auto flex-col sm:flex-row gap-3 justify-end items-center">
+                    <button class="w-full sm:w-auto px-5 py-2.5 rounded-lg border border-[#334155] bg-[#181B21] text-[#94A3B8] hover:text-[#E2E8F0] hover:bg-[#334155]/40 text-sm font-medium transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#334155]">
+                        Guardar Borrador
+                    </button>
+                    <button class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-[#10B981] hover:bg-[#059669] text-white text-sm font-medium transition-colors shadow-sm flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:ring-offset-2 focus:ring-offset-[#181B21]">
+                        Generar y Enviar PDF
+                    </button>
+                </div>
+
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Modal Overlay: Nuevo Cliente -->
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 sm:p-6 backdrop-blur-sm">
+        
+        <!-- Modal Card (600px) -->
+        <div class="w-full max-w-[600px] bg-[#181B21] border border-[#334155] rounded-xl shadow-2xl flex flex-col overflow-hidden">
+            
+            <!-- Cabecera -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-[#334155]">
+                <h2 class="text-xl font-medium tracking-tight text-[#E2E8F0]">Nuevo Cliente</h2>
+                <button type="button" class="text-[#94A3B8] hover:text-[#E2E8F0] transition-colors focus:outline-none rounded-md hover:bg-[#334155]/40 p-1 flex items-center justify-center">
+                    <iconify-icon icon="solar:close-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
+                </button>
+            </div>
+
+            <!-- Contenido / Formulario -->
+            <div class="p-6 space-y-6 overflow-y-auto">
+                
+                <!-- Selector de Tipo (Segmented Control) -->
+                <div class="flex p-1 bg-[#0F1115] border border-[#334155] rounded-lg w-full">
+                    <button type="button" class="flex-1 py-1.5 px-3 bg-[#3B82F6] text-white rounded-md text-sm font-medium shadow-sm transition-colors text-center focus:outline-none">
+                        Empresa (RUC)
+                    </button>
+                    <button type="button" class="flex-1 py-1.5 px-3 text-[#94A3B8] hover:text-[#E2E8F0] hover:bg-[#334155]/30 rounded-md text-sm font-medium transition-colors text-center focus:outline-none">
+                        Persona (DNI)
+                    </button>
+                </div>
+
+                <!-- Grid Layout de Inputs -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    
+                    <!-- Fila 1 (100% ancho): Razón Social -->
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-medium text-[#94A3B8] mb-1.5">Razón Social de la Empresa</label>
+                        <input type="text" placeholder="Ej. Corporación ABC S.A.C." class="block w-full bg-[#0F1115] border border-[#334155] rounded-lg px-3 py-2.5 text-sm text-[#E2E8F0] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-shadow">
+                    </div>
+
+                    <!-- Fila 2 (50/50): RUC | Teléfono -->
+                    <div>
+                        <label class="block text-xs font-medium text-[#94A3B8] mb-1.5">RUC</label>
+                        <input type="text" placeholder="20000000000" class="block w-full bg-[#0F1115] border border-[#334155] rounded-lg px-3 py-2.5 text-sm text-[#E2E8F0] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-shadow">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-[#94A3B8] mb-1.5">Teléfono</label>
+                        <input type="tel" placeholder="+51 999 999 999" class="block w-full bg-[#0F1115] border border-[#334155] rounded-lg px-3 py-2.5 text-sm text-[#E2E8F0] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-shadow">
+                    </div>
+
+                    <!-- Fila 3 (50/50): Nombres | Apellidos -->
+                    <div>
+                        <label class="block text-xs font-medium text-[#94A3B8] mb-1.5">Nombres del Contacto</label>
+                        <input type="text" placeholder="Juan" class="block w-full bg-[#0F1115] border border-[#334155] rounded-lg px-3 py-2.5 text-sm text-[#E2E8F0] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-shadow">
+                    </div>
+                    <div class="">
+                        <label class="block text-xs font-medium text-[#94A3B8] mb-1.5">Apellidos</label>
+                        <input type="text" placeholder="Pérez" class="block w-full bg-[#0F1115] border border-[#334155] rounded-lg px-3 py-2.5 text-sm text-[#E2E8F0] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-shadow">
+                    </div>
+
+                    <!-- Fila 4 (100% ancho): Correo Electrónico con icono @ -->
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-medium text-[#94A3B8] mb-1.5">Correo Electrónico</label>
+                        <div class="relative rounded-lg shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                <span class="text-[#94A3B8] text-base font-medium">@</span>
+                            </div>
+                            <input type="email" placeholder="contacto@empresa.com" class="block w-full bg-[#0F1115] border border-[#334155] rounded-lg pl-9 pr-3 py-2.5 text-sm text-[#E2E8F0] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-shadow">
+                        </div>
+                    </div>
+
+                    <!-- Fila 5 (100% ancho): Dirección -->
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-medium text-[#94A3B8] mb-1.5">Dirección de Facturación</label>
+                        <input type="text" placeholder="Av. Principal 123, Distrito, Ciudad" class="block w-full bg-[#0F1115] border border-[#334155] rounded-lg px-3 py-2.5 text-sm text-[#E2E8F0] placeholder-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#3B82F6] focus:border-[#3B82F6] transition-shadow">
+                    </div>
+                    
+                </div>
+            </div>
+
+            <!-- Footer del Modal -->
+            <div class="px-6 py-4 bg-[#0F1115] border-t border-[#334155] flex justify-between items-center">
+                <button type="button" class="hover:text-[#E2E8F0] transition-colors focus:outline-none hover:bg-[#334155]/30 text-sm font-medium text-[#94A3B8] rounded-lg pt-2.5 pr-4 pb-2.5 pl-4 cursor-pointer" onclick="window.location.href='crear-cotizaci-n.html'" role="button">
+                    Cancelar
+                </button>
+                <button type="button" class="hover:bg-[#2563EB] transition-colors focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-2 focus:ring-offset-[#0F1115] text-sm font-medium text-white bg-[#3B82F6] rounded-lg pt-2.5 pr-5 pb-2.5 pl-5 shadow-sm cursor-pointer" onclick="window.location.href='crear-cotizaci-n.html'" role="button">
+                    Crear Cliente
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+</body></html>

@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "skills": {
+    "database-design": {
+      "source": "davila7/claude-code-templates",
+      "sourceType": "github",
+      "computedHash": "a1a0b5952537df776e2d8f311e30074561709e7fd0a49a691a45f4ffdf12df22"
+    },
+    "docker-deployment": {
+      "source": "aaaaqwq/claude-code-skills",
+      "sourceType": "github",
+      "computedHash": "d630e7b6b7785ce8706cad36a9aae5782edd3dde7a952425bd2aac83d2cfe30d"
+    },
+    "documentation-writer": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "ee53d65b163cd7eb953a930c95841cfe398cc2c0bd24c06508bbaa07c432be35"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "computedHash": "25872a21881a950edc3db1f3329664d60405d539660ce05b3265db2de06a7dfd"
+    },
+    "gmail-automation": {
+      "source": "aaaaqwq/claude-code-skills",
+      "sourceType": "github",
+      "computedHash": "d181cbfe2ce302806d45a6b05fa6fa298a5bdcb343368d0a2a2f78019061e376"
+    },
+    "n8n-expression-syntax": {
+      "source": "czlonkowski/n8n-skills",
+      "sourceType": "github",
+      "computedHash": "3e28711cdf2a53dae95f3b79b7f329304f68c7bb97c1778badf1f30ff6d897af"
+    },
+    "openapi-expert": {
+      "source": "personamanagmentlayer/pcl",
+      "sourceType": "github",
+      "computedHash": "7cceb09ec7b4fcf665d32df2503ecfff9afd044c1589d32245caea494838fa72"
+    },
+    "react-vite-best-practices": {
+      "source": "asyrafhussin/agent-skills",
+      "sourceType": "github",
+      "computedHash": "f39617add5f4853e837aa7f09dfbe8dc6527b6debfa91d4ca89de5ed0ecd614a"
+    },
+    "supabase-automation": {
+      "source": "aaaaqwq/claude-code-skills",
+      "sourceType": "github",
+      "computedHash": "ce16df25dd9996a8b2f7c4a63d5f655bb2d79f602b9e419733e196cb7a93eb21"
+    },
+    "supabase-postgres-best-practices": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "computedHash": "e3ba3d760c5f4cc43b02a91fb8924f726c7818f95cc35d79d0a606ca622b72f5"
+    },
+    "tailwind-design-system": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "computedHash": "0fc7b79d08ee5168d46c6887014cbe5bd02f2c5e458858470e20fc8ecedefb46"
+    },
+    "technical-writing": {
+      "source": "supercent-io/skills-template",
+      "sourceType": "github",
+      "computedHash": "24b18a2653cdf62a8438f191117b91b7b683b9189f6acd88791ca96d6076dbf7"
+    },
+    "writing-clearly-and-concisely": {
+      "source": "softaworks/agent-toolkit",
+      "sourceType": "github",
+      "computedHash": "8941c21d5127d6f7d87cefd9b5175b96c9e0dec0c20c663d68b9cb4331847d0a"
+    }
+  }
+}
