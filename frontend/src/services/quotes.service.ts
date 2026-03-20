@@ -110,7 +110,7 @@ export const quotesService = {
     if (lineas && lineas.length > 0 && finalQuoteId) {
       const lineasToInsert = lineas.map(l => ({
         ...l,
-        id: undefined, // Let DB generate new UUID since we deleted old ones or it's new
+        id: l.id || crypto.randomUUID(),
         cotizacion_id: finalQuoteId
       }));
 
