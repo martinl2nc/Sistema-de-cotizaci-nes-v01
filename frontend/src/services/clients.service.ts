@@ -13,6 +13,7 @@ export interface Client {
   telefono: string | null;
   direccion: string | null;
   comprobante_preferido: string;
+  activo: boolean;
   fecha_creacion: string;
 }
 
@@ -63,6 +64,15 @@ export const updateClient = async (id: string, client: Partial<ClientFormData>):
   return data as Client;
 };
 
+export const toggleClientActive = async (id: string, activo: boolean): Promise<void> => {
+  const { error } = await supabase
+    .from('clientes')
+    .update({ activo })
+    .eq('id', id);
+
+  if (error) throw new Error('Error al cambiar estado: ' + error.message);
+};
+
 export const deleteClient = async (id: string): Promise<void> => {
   const { error } = await supabase
     .from('clientes')
@@ -71,7 +81,7 @@ export const deleteClient = async (id: string): Promise<void> => {
 
   if (error) {
     if (error.code === '23503') {
-      throw new Error('No se puede eliminar: este cliente tiene cotizaciones asociadas.');
+      throw new Error('No se puede eliminar: este cliente tiene cotizaciones asociadas. Puedes desactivarlo en su lugar.');
     }
     throw new Error('Error al eliminar cliente: ' + error.message);
   }

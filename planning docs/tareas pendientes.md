@@ -2,7 +2,7 @@
 
 ## Clientes
 - [ ] **Borrado lógico de Clientes:** Agregar una columna `estado` (por ejemplo, booleano `activo` o texto `estado` = 'Activo'/'Inactivo') a la tabla `clientes`. Esto permitirá desactivar clientes sin borrarlos físicamente de la base de datos, evitando romper las dependencias de llaves foráneas con sus cotizaciones históricas, manejándolo de manera similar a los productos.
-  - Al estar inactivo, el cliente ya no debe aparecer en los selectores ni resultados de búsqueda al momento de crear una nueva cotización.
+  - Al estar inactivo, el cliente ya no debe aparecer en los selectores ni resultados de búsqueda al momento de crear una nueva cotización.(Hecho)
 - [ ] **Validación de correo único:** Actualmente la base de datos y el frontend permiten registrar múltiples clientes con exactamente el mismo correo electrónico. Se debe evaluar e implementar una restricción `UNIQUE` en la base de datos y mostrar un error amigable en el formulario si se intenta duplicar.
 
 ## Categorías

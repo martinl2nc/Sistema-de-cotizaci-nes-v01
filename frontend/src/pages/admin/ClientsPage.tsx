@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useClientsList, useDeleteClient } from '@/hooks/useClients';
+import { useClientsList, useToggleClientActive, useDeleteClient } from '@/hooks/useClients';
 import ClientFormModal from '@/features/clients/ClientFormModal';
 import SellersTab from '@/features/sellers/SellersTab';
 import AdminTabs from '@/components/admin/AdminTabs';
@@ -13,6 +13,7 @@ export default function ClientsPage() {
 
   // ─── Server State (Capa 2) ──────────────────────────────────
   const { data: clients = [], isLoading, isError, error } = useClientsList();
+  const toggleMutation = useToggleClientActive();
   const deleteClientMutation = useDeleteClient();
 
   // ─── Derived: Filtered clients ──────────────────────────────
@@ -29,6 +30,10 @@ export default function ClientsPage() {
   }, [clients, searchTerm]);
 
   // ─── Handlers ───────────────────────────────────────────────
+  const handleToggle = (client: Client) => {
+    toggleMutation.mutate({ id: client.id, activo: !client.activo });
+  };
+
   const handleDelete = (client: Client) => {
     const displayName = client.razon_social || `${client.nombres_contacto} ${client.apellidos_contacto}`;
     const confirmed = window.confirm(`¿Eliminar al cliente "${displayName}"? Esta acción no se puede deshacer.`);
@@ -47,14 +52,6 @@ export default function ClientsPage() {
   const handleNewClient = () => {
     setEditingClient(null);
     setShowModal(true);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-PE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
   };
 
   return (
@@ -151,38 +148,47 @@ export default function ClientsPage() {
                   <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155]">Empresa / Razón Social</th>
                   <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155]">Contacto Principal</th>
                   <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155]">Email & Teléfono</th>
-                  <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155]">Fecha de Registro</th>
+                  <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155] text-center">Estado</th>
                   <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155] text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#334155]/60 bg-[#181B21]">
                 {filteredClients.map((client) => (
                   <tr key={client.id} className="hover:bg-[#334155]/20 transition-colors group">
-                    <td className="px-6 py-4 whitespace-nowrap text-xs text-[#94A3B8]">
+                    <td className={`px-6 py-4 whitespace-nowrap text-xs ${client.activo ? 'text-[#94A3B8]' : 'text-[#94A3B8]/50'}`}>
                       {client.numero_documento || '—'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#E2E8F0]">
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${client.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'}`}>
                       {client.razon_social || `${client.nombres_contacto} ${client.apellidos_contacto}`}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[#E2E8F0]">
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${client.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'}`}>
                       {client.nombres_contacto} {client.apellidos_contacto}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-sm text-[#E2E8F0]">{client.email}</span>
+                        <span className={`text-sm ${client.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'}`}>{client.email}</span>
                         {client.telefono && (
-                          <span className="text-xs text-[#94A3B8]">{client.telefono}</span>
+                          <span className={`text-xs ${client.activo ? 'text-[#94A3B8]' : 'text-[#94A3B8]/50'}`}>{client.telefono}</span>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-xs text-[#94A3B8]">
-                      {formatDate(client.fecha_creacion)}
+                    <td className="px-6 py-4 text-center">
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={client.activo}
+                          onChange={() => handleToggle(client)}
+                        />
+                        <div className="w-9 h-5 bg-[#334155] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#3B82F6]"></div>
+                      </label>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleEdit(client)}
                           className="flex items-center gap-1.5 border border-[#334155] hover:bg-[#334155]/50 transition-colors font-medium text-[#E2E8F0] rounded-md px-2.5 py-1.5"
+                          title="Editar"
                         >
                           <iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
                           <span className="text-xs">Editar</span>

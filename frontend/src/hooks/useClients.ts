@@ -3,6 +3,7 @@ import {
   getClients,
   createClient,
   updateClient,
+  toggleClientActive,
   deleteClient,
 } from '@/services/clients.service';
 import type { ClientFormData } from '@/services/clients.service';
@@ -42,6 +43,18 @@ export const useUpdateClient = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<ClientFormData> }) =>
       updateClient(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: clientsKeys.list() });
+    },
+  });
+};
+
+export const useToggleClientActive = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, activo }: { id: string; activo: boolean }) =>
+      toggleClientActive(id, activo),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: clientsKeys.list() });
     },

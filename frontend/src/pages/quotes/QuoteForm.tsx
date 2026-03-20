@@ -52,6 +52,19 @@ export default function QuoteForm() {
   const [initialized, setInitialized] = useState(false);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
 
+  // Filter active clients for the selector, but always include the current quote's client
+  const selectableClients = useMemo(() => {
+    const activeClients = clients.filter(c => c.activo);
+    // If editing and the assigned client is inactive, include it so the form doesn't break
+    if (quoteData.cliente_id) {
+      const currentClient = clients.find(c => c.id === quoteData.cliente_id);
+      if (currentClient && !currentClient.activo) {
+        return [currentClient, ...activeClients];
+      }
+    }
+    return activeClients;
+  }, [clients, quoteData.cliente_id]);
+
   // ─── Initialize form from server data ───────────────────────
   useEffect(() => {
     if (initialized) return;
@@ -196,10 +209,13 @@ export default function QuoteForm() {
   };
 
   const getClientDisplayName = (client: Client) => {
+    let name: string;
     if (client.razon_social && client.razon_social.trim() !== '') {
-      return `${client.razon_social} (Doc: ${client.numero_documento || 'N/A'})`;
+      name = `${client.razon_social} (Doc: ${client.numero_documento || 'N/A'})`;
+    } else {
+      name = `${client.nombres_contacto || ''} ${client.apellidos_contacto || ''}`.trim() || 'Sin Nombre';
     }
-    return `${client.nombres_contacto || ''} ${client.apellidos_contacto || ''}`.trim() || 'Sin Nombre';
+    return client.activo ? name : `${name} — (Inactivo)`;
   };
 
   const formatCurrency = (val: number) => 'S/ ' + val.toFixed(2);
@@ -266,7 +282,7 @@ export default function QuoteForm() {
                   onChange={(e) => handleQuoteChange('cliente_id', e.target.value)}
                 >
                   <option value="">Seleccionar Cliente...</option>
-                  {clients.map(c => (
+                  {selectableClients.map(c => (
                     <option key={c.id} value={c.id}>{getClientDisplayName(c)}</option>
                   ))}
                 </select>
