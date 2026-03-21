@@ -258,7 +258,7 @@ export default function QuoteForm() {
           <h1 className="text-2xl font-medium tracking-tight text-[#E2E8F0]">{currentDisplayId}</h1>
           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border 
             ${quoteData.estado === 'Aprobada' || quoteData.estado === 'Enviada' ? 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20' : 
-              quoteData.estado === 'Por Revisar' || quoteData.estado === 'Generar PDF' ? 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20' : 
+              quoteData.estado === 'PDF Generado' ? 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20' : 
               quoteData.estado === 'Borrador' ? 'bg-[#94A3B8]/10 text-[#94A3B8] border-[#94A3B8]/20' :
             'bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/20'}`}>
             {quoteData.estado}
@@ -485,7 +485,7 @@ export default function QuoteForm() {
               <iconify-icon icon="solar:diskette-linear" class="text-lg"></iconify-icon> Guardar Borrador
             </button>
             <button
-              onClick={() => handleSave('Generar PDF')}
+              onClick={() => handleSave('PDF Generado')}
               disabled={isSaving}
               className="bg-[#10B981] hover:bg-[#059669] text-white px-6 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-colors disabled:opacity-50 flex items-center gap-2"
             >

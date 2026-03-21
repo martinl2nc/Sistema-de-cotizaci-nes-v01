@@ -13,7 +13,7 @@ export interface QuoteLineItem {
   subtotal_linea: number;
 }
 
-export type QuoteStatus = 'Por Revisar' | 'Aprobada' | 'Generar PDF' | 'Enviada' | 'Cancelada' | 'Borrador';
+export type QuoteStatus = 'Aprobada' | 'PDF Generado' | 'Enviada' | 'Cancelada' | 'Borrador';
 
 export interface Quote {
   id: string;
@@ -54,7 +54,8 @@ export const quotesService = {
         clientes ( id, razon_social, nombres_contacto, apellidos_contacto, numero_documento ),
         vendedores ( id, nombre )
       `)
-      .order('fecha_emision', { ascending: false });
+      .order('fecha_emision', { ascending: false })
+      .order('numero_correlativo', { ascending: false });
 
     if (error) throw error;
     return data || [];

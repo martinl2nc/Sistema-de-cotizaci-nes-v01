@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useCompanyConfig, useSaveCompanyConfig } from '@/hooks/useCompanyConfig';
+import { useState, useEffect, useRef } from 'react';
+import { useCompanyConfig, useSaveCompanyConfig, useUploadCompanyLogo, useDeleteCompanyLogo } from '@/hooks/useCompanyConfig';
 import AdminTabs from '@/components/admin/AdminTabs';
 import type { CompanyConfigFormData } from '@/services/companyConfig.service';
 
@@ -9,16 +9,21 @@ const initialFormState: CompanyConfigFormData = {
   direccion: '',
   cuentas_bancarias: '',
   terminos_condiciones: '',
+  logo_url: null,
 };
 
 export default function CompanyConfigPage() {
   const { data: config, isLoading, isError, error } = useCompanyConfig();
   const saveMutation = useSaveCompanyConfig();
+  const uploadMutation = useUploadCompanyLogo();
+  const deleteMutation = useDeleteCompanyLogo();
 
   const [formData, setFormData] = useState<CompanyConfigFormData>(initialFormState);
   const [initialized, setInitialized] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Populate form when data loads
   useEffect(() => {
@@ -29,6 +34,7 @@ export default function CompanyConfigPage() {
         direccion: config.direccion || '',
         cuentas_bancarias: config.cuentas_bancarias || '',
         terminos_condiciones: config.terminos_condiciones || '',
+        logo_url: config.logo_url || null,
       });
       setInitialized(true);
     }
@@ -41,6 +47,79 @@ export default function CompanyConfigPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Clear input
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    setErrorMsg(null);
+
+    // Validate size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setErrorMsg('El logo debe pesar máximo 2MB.');
+      return;
+    }
+
+    // Validate type
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'].includes(file.type)) {
+      setErrorMsg('Formato no soportado. Usa PNG, JPG, WEBP o SVG.');
+      return;
+    }
+
+    try {
+      // 1. Upload new logo
+      const publicUrl = await uploadMutation.mutateAsync(file);
+
+      // 2. If there was an old logo, delete it
+      if (formData.logo_url) {
+        await deleteMutation.mutateAsync(formData.logo_url);
+      }
+
+      // 3. Update UI state
+      const newFormData = { ...formData, logo_url: publicUrl };
+      setFormData(newFormData);
+
+      // 4. Save automatically to DB
+      await saveMutation.mutateAsync({ id: config?.id ?? null, data: newFormData });
+      setSuccessMsg('Logo subido y guardado correctamente.');
+      setTimeout(() => setSuccessMsg(null), 4000);
+
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+            setErrorMsg(err.message);
+        } else {
+             setErrorMsg('Error al subir el logo.');
+        }
+    }
+  };
+
+  const handleDeleteLogo = async () => {
+    if (!formData.logo_url) return;
+    setErrorMsg(null);
+
+    try {
+      // 1. Delete from storage
+      await deleteMutation.mutateAsync(formData.logo_url);
+
+      // 2. Update UI state
+      const newFormData = { ...formData, logo_url: null };
+      setFormData(newFormData);
+
+      // 3. Save to DB
+      await saveMutation.mutateAsync({ id: config?.id ?? null, data: newFormData });
+      
+      setSuccessMsg('Logo eliminado correctamente.');
+      setTimeout(() => setSuccessMsg(null), 4000);
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+            setErrorMsg(err.message);
+        } else {
+             setErrorMsg('Error al eliminar el logo.');
+        }
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -104,11 +183,74 @@ export default function CompanyConfigPage() {
       <div className="max-w-[800px] w-full mx-auto">
         <div className="bg-[#181B21] border border-[#334155] rounded-xl shadow-sm flex flex-col p-6 sm:p-8">
 
+          {/* Logo Section */}
+          <div className="mb-8 border-b border-[#334155] pb-6">
+            <h2 className="text-lg font-semibold tracking-tight text-[#E2E8F0] mb-1.5">Logo de Empresa</h2>
+            <p className="text-sm text-[#94A3B8] mb-4">Este logo aparecerá en el menú de la aplicación y en los PDFs generados.</p>
+            
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+              <div className="w-32 h-32 shrink-0 bg-[#0F1115] border-2 border-dashed border-[#334155] rounded-xl flex items-center justify-center overflow-hidden relative group">
+                 {formData.logo_url ? (
+                    <img 
+                       src={formData.logo_url} 
+                       alt="Logo Empresa" 
+                       className="max-w-full max-h-full object-contain p-2"
+                    />
+                 ) : (
+                    <div className="text-[#94A3B8] flex flex-col items-center">
+                       <iconify-icon icon="solar:gallery-upload-linear" class="text-3xl mb-1"></iconify-icon>
+                       <span className="text-xs font-medium">Sin logo</span>
+                    </div>
+                 )}
+                 {uploadMutation.isPending && (
+                    <div className="absolute inset-0 bg-[#0F1115]/80 flex flex-col items-center justify-center z-10">
+                       <iconify-icon icon="line-md:loading-twotone-loop" class="text-3xl text-[#3B82F6]"></iconify-icon>
+                    </div>
+                 )}
+              </div>
+              
+              <div className="flex flex-col gap-3">
+                 <input 
+                   type="file" 
+                   ref={fileInputRef} 
+                   onChange={handleLogoUpload}
+                   accept="image/png, image/jpeg, image/webp, image/svg+xml"
+                   className="hidden" 
+                 />
+                 <button 
+                   type="button"
+                   disabled={uploadMutation.isPending || deleteMutation.isPending}
+                   onClick={() => fileInputRef.current?.click()}
+                   className="px-4 py-2 bg-[#334155]/50 hover:bg-[#334155] border border-[#334155] text-[#E2E8F0] text-sm font-medium rounded-lg transition-colors flex items-center gap-2 w-fit disabled:opacity-50"
+                 >
+                   <iconify-icon icon="solar:upload-linear" class="text-lg"></iconify-icon>
+                   {formData.logo_url ? 'Cambiar Logo' : 'Subir Logo'}
+                 </button>
+                 
+                 {formData.logo_url && (
+                    <button 
+                      type="button"
+                      disabled={uploadMutation.isPending || deleteMutation.isPending}
+                      onClick={handleDeleteLogo}
+                      className="px-4 py-2 bg-[#EF4444]/10 hover:bg-[#EF4444]/20 border border-[#EF4444]/20 text-[#EF4444] hover:text-[#EF4444] text-sm font-medium rounded-lg transition-colors flex items-center gap-2 w-fit disabled:opacity-50"
+                    >
+                      <iconify-icon icon="solar:trash-bin-trash-linear" class="text-lg"></iconify-icon>
+                      Eliminar Logo
+                    </button>
+                 )}
+                 <p className="text-xs text-[#94A3B8] max-w-[250px]">
+                   Formatos soportados: PNG, JPG, WEBP, SVG. Tamaño máximo: 2MB. Recomendado: fondo transparente.
+                 </p>
+              </div>
+            </div>
+          </div>
+
           {/* Form Header */}
           <div className="mb-8 border-b border-[#334155] pb-5">
             <h2 className="text-lg font-semibold tracking-tight text-[#E2E8F0]">Datos Legales para el PDF</h2>
             <p className="text-sm text-[#94A3B8] mt-1.5">Esta información se imprimirá en la cabecera y pie de página de las cotizaciones.</p>
           </div>
+
 
           {/* Alerts */}
           {successMsg && (

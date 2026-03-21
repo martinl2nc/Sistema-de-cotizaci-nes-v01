@@ -155,8 +155,7 @@ export default function QuotesList() {
             >
               <option value="">Por Estado</option>
               <option value="Borrador">Borrador</option>
-              <option value="Por Revisar">Por Revisar</option>
-              <option value="Generar PDF">Generar PDF</option>
+              <option value="PDF Generado">PDF Generado</option>
               <option value="Enviada">Enviada</option>
               <option value="Cancelada">Cancelada</option>
             </select>
@@ -237,14 +236,13 @@ export default function QuotesList() {
                       onChange={(e) => handleStatusChange(quote.id, e.target.value)}
                       className={`text-[10px] font-bold px-2 py-1 rounded-full border-none cursor-pointer focus:ring-1 focus:ring-blue-500 transition-colors
                         ${quote.estado === 'Aprobada' || quote.estado === 'Enviada' ? 'bg-[#10B981]/10 text-[#10B981]' : 
-                          quote.estado === 'Por Revisar' || quote.estado === 'Generar PDF' ? 'bg-[#F59E0B]/10 text-[#F59E0B]' : 
+                          quote.estado === 'PDF Generado' ? 'bg-[#F59E0B]/10 text-[#F59E0B]' : 
                           quote.estado === 'Borrador' ? 'bg-[#94A3B8]/10 text-[#94A3B8]' :
                           'bg-[#EF4444]/10 text-[#EF4444]'}`}
                     >
                       <option value="Borrador" className="bg-[#181B21]">Borrador</option>
-                      <option value="Por Revisar" className="bg-[#181B21]">Por Revisar</option>
                       <option value="Aprobada" className="bg-[#181B21]">Aprobada</option>
-                      <option value="Generar PDF" className="bg-[#181B21]">Generar PDF</option>
+                      <option value="PDF Generado" className="bg-[#181B21]">PDF Generado</option>
                       <option value="Enviada" className="bg-[#181B21]">Enviada</option>
                       <option value="Cancelada" className="bg-[#181B21]">Cancelada</option>
                     </select>

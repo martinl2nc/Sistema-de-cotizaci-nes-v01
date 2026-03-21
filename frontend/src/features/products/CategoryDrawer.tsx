@@ -73,7 +73,7 @@ export default function CategoryDrawer({ open, onClose }: CategoryDrawerProps) {
   };
 
   const handleDelete = (cat: Category) => {
-    if (!confirm(`¿Eliminar la categoría "${cat.nombre}"?`)) return;
+    if (!confirm(`¿Eliminar la categoría "${cat.nombre}"? Los productos asociados quedarán "Sin categoría".`)) return;
     setErrorMsg(null);
     deleteMutation.mutate(cat.id, {
       onError: (err) => setErrorMsg(err.message),

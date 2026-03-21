@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 type BadgeProps = {
   status: 'Por Revisar' | 'Enviada' | 'Rechazada' | 'Aprobada';

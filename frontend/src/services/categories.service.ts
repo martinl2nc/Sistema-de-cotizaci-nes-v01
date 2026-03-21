@@ -53,9 +53,6 @@ export const deleteCategory = async (id: string): Promise<void> => {
     .eq('id', id);
 
   if (error) {
-    if (error.code === '23503') {
-      throw new Error('No se puede eliminar: esta categoría tiene productos asociados.');
-    }
     throw new Error('Error al eliminar categoría: ' + error.message);
   }
 };

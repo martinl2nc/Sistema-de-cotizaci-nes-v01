@@ -1,7 +1,9 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useCompanyConfig } from '@/hooks/useCompanyConfig';
 
 export default function Sidebar() {
   const location = useLocation();
+  const { data: config } = useCompanyConfig();
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
@@ -9,13 +11,21 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="flex-shrink-0 flex flex-col hidden md:flex bg-[#181B21] w-[250px] border-[#334155] border-r justify-between h-screen">
+    <aside className="shrink-0 hidden md:flex flex-col bg-[#181B21] w-[250px] border-[#334155] border-r justify-between h-screen">
       <div>
         {/* Logo */}
         <div className="h-16 flex items-center px-6 border-b border-[#334155]">
-          <span className="text-xl font-semibold tracking-tight text-[#E2E8F0]">
-            COTIZADOR<span className="text-[#3B82F6]">PRO</span>
-          </span>
+          {config?.logo_url ? (
+            <img 
+              src={config.logo_url} 
+              alt={config.razon_social || "Logo Empresa"} 
+              className="max-h-8 w-auto object-contain"
+            />
+          ) : (
+            <span className="text-xl font-semibold tracking-tight text-[#E2E8F0]">
+              COTIZADOR<span className="text-[#3B82F6]">PRO</span>
+            </span>
+          )}
         </div>
 
         {/* Navigation */}

@@ -9,6 +9,7 @@ export interface CompanyConfig {
   direccion: string | null;
   cuentas_bancarias: string | null;
   terminos_condiciones: string | null;
+  logo_url: string | null;
 }
 
 export interface CompanyConfigFormData {
@@ -17,6 +18,7 @@ export interface CompanyConfigFormData {
   direccion: string;
   cuentas_bancarias: string;
   terminos_condiciones: string;
+  logo_url: string | null;
 }
 
 // ─── Service Functions (Capa 1) ──────────────────────────────
@@ -69,5 +71,52 @@ export const saveCompanyConfig = async (
 
     if (error) throw new Error('Error al crear configuración: ' + error.message);
     return created as CompanyConfig;
+  }
+};
+
+/**
+ * Uploads a company logo to the 'company-assets' storage bucket.
+ * Returns the public URL of the uploaded image.
+ */
+export const uploadCompanyLogo = async (file: File): Promise<string> => {
+  const fileExt = file.name.split('.').pop();
+  const filePath = `logos/company-logo-${Date.now()}.${fileExt}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('company-assets')
+    .upload(filePath, file, { upsert: true });
+
+  if (uploadError) {
+    throw new Error('Error al subir el logo: ' + uploadError.message);
+  }
+
+  const { data } = supabase.storage
+    .from('company-assets')
+    .getPublicUrl(filePath);
+
+  return data.publicUrl;
+};
+
+/**
+ * Deletes a company logo from the 'company-assets' storage bucket.
+ * Expected url is the full public URL, we slice it to get the path.
+ */
+export const deleteCompanyLogo = async (publicUrl: string): Promise<void> => {
+  try {
+    const urlParts = publicUrl.split('/company-assets/');
+    if (urlParts.length !== 2) return;
+    
+    const filePath = urlParts[1];
+    
+    const { error } = await supabase.storage
+      .from('company-assets')
+      .remove([filePath]);
+      
+    if (error) {
+      console.error('Error al eliminar logo del storage:', error);
+      // We don't throw here to avoid failing the DB update if the file was already deleted
+    }
+  } catch (err) {
+    console.error('Unexpected error deleting company logo:', err);
   }
 };

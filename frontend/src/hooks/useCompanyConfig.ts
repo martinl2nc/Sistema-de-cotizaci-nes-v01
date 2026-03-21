@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getCompanyConfig,
   saveCompanyConfig,
+  uploadCompanyLogo,
+  deleteCompanyLogo,
 } from '@/services/companyConfig.service';
 import type { CompanyConfigFormData } from '@/services/companyConfig.service';
 
@@ -32,5 +34,17 @@ export const useSaveCompanyConfig = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: companyConfigKeys.detail() });
     },
+  });
+};
+
+export const useUploadCompanyLogo = () => {
+  return useMutation({
+    mutationFn: (file: File) => uploadCompanyLogo(file),
+  });
+};
+
+export const useDeleteCompanyLogo = () => {
+  return useMutation({
+    mutationFn: (publicUrl: string) => deleteCompanyLogo(publicUrl),
   });
 };

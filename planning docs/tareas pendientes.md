@@ -8,13 +8,13 @@
 ## Categorías
 - [ ] **Discrepancia en borrado de categorías:** La base de datos está configurada con `ON DELETE SET NULL` para los productos. Esto significa que si se borra una categoría, se borra exitosamente y sus productos quedan huérfanos de categoría (`categoria_id = NULL`). Sin embargo, el frontend (`categories.service.ts`) erróneamente asume que la base de datos bloqueará esto con un error `23503` ("esta categoría tiene productos asociados"). Se debe:
   - Cambiar la regla en la base de datos a `ON DELETE RESTRICT` si no se desea permitir borrar categorías en uso.
-  - O actualizar el frontend para reflejar que la categoría sí se borra y los productos quedan en "Sin categoría".
+  - O actualizar el frontend para reflejar que la categoría sí se borra y los productos quedan en "Sin categoría".(Hecho)
 
 ## Empresa y Configuración General
 - [ ] **Configuración de Logo de la Empresa:** Agregar funcionalidad para subir y administrar el logo de la empresa desde la sección "Configuración de Empresa".
   - Reflejar este logo visualmente en la aplicación (por ejemplo, en la cabecera del frontend).
   - Inyectar el logo en el documento PDF final de las cotizaciones generadas.
-  - *Requerimiento técnico:* Crear una columna `logo_url` en la tabla `empresa_configuracion` y configurar un bucket en **Supabase Storage** para alojar y servir la imagen de manera pública/segura.
+  - *Requerimiento técnico:* Crear una columna `logo_url` en la tabla `empresa_configuracion` y configurar un bucket en **Supabase Storage** para alojar y servir la imagen de manera pública/segura.(Hecho)
 
 ## Módulo de Autenticación (Login)
 - [ ] **Integrar Supabase Auth:** Configurar el sistema de autenticación seguro de Supabase.
