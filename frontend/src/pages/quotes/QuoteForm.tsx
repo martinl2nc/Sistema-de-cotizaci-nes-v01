@@ -175,6 +175,11 @@ export default function QuoteForm() {
       return;
     }
 
+    if (!quoteData.vendedor_id) {
+      setError('Por favor asigna un vendedor a esta cotización.');
+      return;
+    }
+
     const invalidLines = lineItems.some(l => l.nombre_producto_historico.trim() === '' || Number(l.cantidad) <= 0 || Number(l.precio_unitario) < 0);
     if (invalidLines) {
       setError('Asegúrate de que todas las líneas tengan nombre de producto y cantidades válidas (mayor a 0).');
@@ -185,6 +190,7 @@ export default function QuoteForm() {
     const finalQuoteData: QuoteFormData = {
       ...quoteData,
       estado: status,
+      vendedor_id: quoteData.vendedor_id || null,
       subtotal: totals.subtotal,
       igv_monto: totals.igv_monto,
       total_final: totals.total_final,

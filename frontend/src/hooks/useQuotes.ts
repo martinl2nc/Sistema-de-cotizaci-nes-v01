@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { quotesService } from '@/services/quotes.service';
-import type { QuoteFormData, QuoteStatus } from '@/services/quotes.service';
+import type { QuoteFormData, QuoteStatus, Quote } from '@/services/quotes.service';
 
 export const quotesKeys = {
   all: ['quotes'] as const,
@@ -54,11 +54,33 @@ export function useUpdateQuoteStatus() {
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: QuoteStatus }) => 
       quotesService.updateQuoteStatus(id, status),
-    onSuccess: (updatedQuote: any) => {
-      queryClient.invalidateQueries({ queryKey: quotesKeys.list() });
-      if (updatedQuote.id) {
-        queryClient.invalidateQueries({ queryKey: quotesKeys.detail(updatedQuote.id) });
+
+    // Optimistic update: immediately reflect the change in cache
+    onMutate: async ({ id, status }) => {
+      // Cancel any in-flight refetches so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: quotesKeys.list() });
+
+      // Snapshot the previous list for rollback
+      const previousQuotes = queryClient.getQueryData<Quote[]>(quotesKeys.list());
+
+      // Optimistically update the cache
+      queryClient.setQueryData<Quote[]>(quotesKeys.list(), (old) =>
+        old?.map(q => q.id === id ? { ...q, estado: status } : q) ?? []
+      );
+
+      return { previousQuotes };
+    },
+
+    // Rollback on error
+    onError: (_err, _vars, context) => {
+      if (context?.previousQuotes) {
+        queryClient.setQueryData(quotesKeys.list(), context.previousQuotes);
       }
+    },
+
+    // Always refetch after settle to ensure server state is in sync
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: quotesKeys.list() });
     },
   });
 }
