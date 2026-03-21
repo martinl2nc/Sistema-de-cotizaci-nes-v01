@@ -6,5 +6,6 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 if (!supabaseUrl || !supabaseKey) {
   throw new Error('Supabase URL and Key must be provided in the .env file');
 }
-
 export const supabase = createClient(supabaseUrl, supabaseKey);
+
+

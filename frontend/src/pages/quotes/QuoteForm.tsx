@@ -71,7 +71,7 @@ export default function QuoteForm() {
     if (loading) return;
 
     if (isEditing && existingQuote) {
-      const { cotizaciones_lineas, clientes, vendedores, ...headData } = existingQuote;
+      const { cotizaciones_lineas, clientes, perfiles_usuario, ...headData } = existingQuote;
       setQuoteData({
         ...headData,
         vendedor_id: headData.vendedor_id || '',

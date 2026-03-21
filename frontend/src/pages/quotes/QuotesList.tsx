@@ -61,7 +61,7 @@ export default function QuotesList() {
         }
 
         // 2. Seller filter
-        const sellerName = quote.vendedores?.nombre;
+        const sellerName = quote.perfiles_usuario?.nombre;
         const matchSeller = selectedSeller === '' || sellerName === selectedSeller;
 
         // 3. Status filter
@@ -104,7 +104,7 @@ export default function QuotesList() {
     return 'Sin Nombre';
   };
 
-  const getSellerName = (vendedor: Quote['vendedores']) => {
+  const getSellerName = (vendedor: Quote['perfiles_usuario']) => {
     if (!vendedor) return 'No asignado';
     return vendedor?.nombre || 'Desconocido';
   };
@@ -228,7 +228,7 @@ export default function QuotesList() {
                   <td className="px-5 py-3.5 text-sm text-[#E2E8F0] font-medium">COT-{quote.numero_correlativo}</td>
                   <td className="px-5 py-3.5 text-sm text-[#94A3B8]">{formatDate(quote.fecha_emision)}</td>
                   <td className="px-5 py-3.5 text-sm text-[#E2E8F0]">{getClientName(quote.clientes)}</td>
-                  <td className="px-5 py-3.5 text-sm text-[#94A3B8]">{getSellerName(quote.vendedores)}</td>
+                  <td className="px-5 py-3.5 text-sm text-[#94A3B8]">{getSellerName(quote.perfiles_usuario)}</td>
                   <td className="px-5 py-3.5 text-sm text-[#E2E8F0] font-medium text-right">{formatCurrency(quote.total_final)}</td>
                   <td className="px-5 py-3.5 text-sm uppercase">
                     <select 

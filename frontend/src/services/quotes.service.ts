@@ -1,6 +1,5 @@
 import { supabase } from '@/config/supabaseClient';
 import type { Client } from './clients.service';
-import type { Seller } from './sellers.service';
 
 export interface QuoteLineItem {
   id?: string;
@@ -36,11 +35,11 @@ export interface Quote {
   
   // Relaciones
   clientes?: Client;
-  vendedores?: Seller;
+  perfiles_usuario?: { id: string, nombre: string, email?: string };
   cotizaciones_lineas?: QuoteLineItem[];
 }
 
-export interface QuoteFormData extends Omit<Quote, 'id' | 'numero_correlativo' | 'fecha_creacion' | 'ultima_actualizacion' | 'cotizaciones_lineas' | 'clientes' | 'vendedores'> {
+export interface QuoteFormData extends Omit<Quote, 'id' | 'numero_correlativo' | 'fecha_creacion' | 'ultima_actualizacion' | 'cotizaciones_lineas' | 'clientes' | 'perfiles_usuario'> {
   id?: string;
   lineas: QuoteLineItem[];
 }
@@ -52,7 +51,7 @@ export const quotesService = {
       .select(`
         *,
         clientes ( id, razon_social, nombres_contacto, apellidos_contacto, numero_documento ),
-        vendedores ( id, nombre )
+        perfiles_usuario ( id, nombre )
       `)
       .order('fecha_emision', { ascending: false })
       .order('numero_correlativo', { ascending: false });
@@ -67,7 +66,7 @@ export const quotesService = {
       .select(`
         *,
         clientes ( id, razon_social, nombres_contacto, apellidos_contacto, numero_documento, email, telefono, direccion ),
-        vendedores ( id, nombre, email ),
+        perfiles_usuario ( id, nombre, email ),
         cotizaciones_lineas (*)
       `)
       .eq('id', id)

@@ -16,8 +16,9 @@ export interface SellerFormData {
 export const sellersService = {
   async getSellers(): Promise<Seller[]> {
     const { data, error } = await supabase
-      .from('vendedores')
+      .from('perfiles_usuario')
       .select('*')
+      .eq('rol', 'vendedor')
       .order('nombre', { ascending: true });
 
     if (error) throw error;
@@ -26,8 +27,8 @@ export const sellersService = {
 
   async createSeller(seller: SellerFormData): Promise<Seller> {
     const { data, error } = await supabase
-      .from('vendedores')
-      .insert([seller])
+      .from('perfiles_usuario')
+      .insert([{ ...seller, rol: 'vendedor' }])
       .select()
       .single();
 
@@ -37,7 +38,7 @@ export const sellersService = {
 
   async updateSeller(id: string, seller: Partial<SellerFormData>): Promise<Seller> {
     const { data, error } = await supabase
-      .from('vendedores')
+      .from('perfiles_usuario')
       .update(seller)
       .eq('id', id)
       .select()
@@ -49,7 +50,7 @@ export const sellersService = {
 
   async deleteSeller(id: string): Promise<void> {
     const { error } = await supabase
-      .from('vendedores')
+      .from('perfiles_usuario')
       .delete()
       .eq('id', id);
 
@@ -58,7 +59,7 @@ export const sellersService = {
 
   async toggleSellerActive(id: string, currentStatus: boolean): Promise<Seller> {
     const { data, error } = await supabase
-      .from('vendedores')
+      .from('perfiles_usuario')
       .update({ activo: !currentStatus })
       .eq('id', id)
       .select()
