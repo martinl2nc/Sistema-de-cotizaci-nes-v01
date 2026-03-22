@@ -32,14 +32,16 @@ export default function Login() {
   const onSubmit = async (data: LoginFormValues) => {
     setAuthError(null);
     try {
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('TIMEOUT')), 8000)
+      );
+
       const response = await Promise.race([
         supabase.auth.signInWithPassword({
           email: data.email,
           password: data.password,
         }),
-        new Promise<{ data: any, error: any }>((_, reject) =>
-          setTimeout(() => reject(new Error('TIMEOUT')), 8000)
-        ),
+        timeoutPromise,
       ]);
 
       const { error } = response;
@@ -53,8 +55,8 @@ export default function Login() {
     } else {
       navigate('/', { replace: true });
     }
-  } catch (err: any) {
-    if (err.message === 'TIMEOUT') {
+    } catch (err: unknown) {
+    if (err instanceof Error && err.message === 'TIMEOUT') {
       setAuthError('La conexión está tardando demasiado. Asegúrate de tener buena señal o recarga la página.');
     } else {
       setAuthError('Error inesperado. Intenta recargar la página.');

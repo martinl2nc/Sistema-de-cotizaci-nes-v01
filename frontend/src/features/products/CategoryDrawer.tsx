@@ -5,6 +5,7 @@ import {
   useUpdateCategory,
   useDeleteCategory,
 } from '@/hooks/useCategories';
+import { getCategoryProductCount } from '@/services/categories.service';
 import type { Category } from '@/services/categories.service';
 
 interface CategoryDrawerProps {
@@ -72,12 +73,27 @@ export default function CategoryDrawer({ open, onClose }: CategoryDrawerProps) {
     );
   };
 
-  const handleDelete = (cat: Category) => {
-    if (!confirm(`¿Eliminar la categoría "${cat.nombre}"? Los productos asociados quedarán "Sin categoría".`)) return;
+  const handleDelete = async (cat: Category) => {
     setErrorMsg(null);
-    deleteMutation.mutate(cat.id, {
-      onError: (err) => setErrorMsg(err.message),
-    });
+    
+    try {
+      // Verificar cuántos productos tiene esta categoría
+      const productCount = await getCategoryProductCount(cat.id);
+      
+      if (productCount > 0) {
+        setErrorMsg(`No se puede eliminar "${cat.nombre}": tiene ${productCount} producto${productCount > 1 ? 's' : ''} asociado${productCount > 1 ? 's' : ''}. Reasigna los productos a otra categoría primero.`);
+        return;
+      }
+      
+      // Si no tiene productos, confirmar eliminación
+      if (!confirm(`¿Eliminar la categoría "${cat.nombre}"?`)) return;
+      
+      deleteMutation.mutate(cat.id, {
+        onError: (err) => setErrorMsg(err.message),
+      });
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Error al verificar productos');
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, action: () => void) => {
@@ -201,7 +217,10 @@ export default function CategoryDrawer({ open, onClose }: CategoryDrawerProps) {
                     ) : (
                       /* View mode */
                       <>
-                        <span className="flex-1 text-sm text-[#E2E8F0]">{cat.nombre}</span>
+                        <div className="flex-1 flex items-center gap-2">
+                          <span className="text-sm text-[#E2E8F0]">{cat.nombre}</span>
+                          <CategoryProductBadge categoryId={cat.id} />
+                        </div>
                         <button
                           onClick={() => handleStartEdit(cat)}
                           className="text-[#94A3B8] hover:text-[#3B82F6] hover:bg-[#3B82F6]/10 p-1 rounded transition-colors"
@@ -236,5 +255,28 @@ export default function CategoryDrawer({ open, onClose }: CategoryDrawerProps) {
         </div>
       </div>
     </>
+  );
+}
+
+// ─── Componente auxiliar: Badge con contador de productos ───────
+function CategoryProductBadge({ categoryId }: { categoryId: string }) {
+  const [count, setCount] = useState<number | null>(null);
+  
+  useEffect(() => {
+    getCategoryProductCount(categoryId)
+      .then(setCount)
+      .catch(() => setCount(null));
+  }, [categoryId]);
+  
+  // No mostrar nada mientras carga o si no hay productos
+  if (count === null || count === 0) return null;
+  
+  return (
+    <span 
+      className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-[#334155] text-[#94A3B8]"
+      title={`${count} producto${count > 1 ? 's' : ''} usando esta categoría`}
+    >
+      {count}
+    </span>
   );
 }

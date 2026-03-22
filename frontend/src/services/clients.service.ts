@@ -41,6 +41,17 @@ export const getClients = async (): Promise<Client[]> => {
   return data as Client[];
 };
 
+export const getActiveClients = async (): Promise<Client[]> => {
+  const { data, error } = await supabase
+    .from('clientes')
+    .select('*')
+    .eq('activo', true)
+    .order('fecha_creacion', { ascending: false });
+
+  if (error) throw new Error('Error al cargar clientes activos: ' + error.message);
+  return data as Client[];
+};
+
 export const createClient = async (client: ClientFormData): Promise<Client> => {
   const { data, error } = await supabase
     .from('clientes')
@@ -48,7 +59,17 @@ export const createClient = async (client: ClientFormData): Promise<Client> => {
     .select()
     .single();
 
-  if (error) throw new Error('Error al crear cliente: ' + error.message);
+  if (error) {
+    // Error por email duplicado
+    if (error.code === '23505' && error.message.includes('clientes_email_unique')) {
+      throw new Error('Ya existe un cliente registrado con este correo electrónico.');
+    }
+    // Error por documento duplicado (constraint ya existe)
+    if (error.code === '23505' && error.message.includes('numero_documento')) {
+      throw new Error('Ya existe un cliente con este número de documento.');
+    }
+    throw new Error('Error al crear cliente: ' + error.message);
+  }
   return data as Client;
 };
 
@@ -60,7 +81,17 @@ export const updateClient = async (id: string, client: Partial<ClientFormData>):
     .select()
     .single();
 
-  if (error) throw new Error('Error al actualizar cliente: ' + error.message);
+  if (error) {
+    // Error por email duplicado
+    if (error.code === '23505' && error.message.includes('clientes_email_unique')) {
+      throw new Error('Ya existe otro cliente con este correo electrónico.');
+    }
+    // Error por documento duplicado
+    if (error.code === '23505' && error.message.includes('numero_documento')) {
+      throw new Error('Ya existe otro cliente con este número de documento.');
+    }
+    throw new Error('Error al actualizar cliente: ' + error.message);
+  }
   return data as Client;
 };
 

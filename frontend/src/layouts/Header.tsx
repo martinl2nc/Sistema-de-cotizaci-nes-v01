@@ -1,7 +1,9 @@
 import { useLocation, Link } from 'react-router-dom';
+import { useCompanyConfig } from '@/hooks/useCompanyConfig';
 
 export default function Header() {
   const location = useLocation();
+  const { data: config } = useCompanyConfig();
 
   // Simple breadcrumb logic
   const getBreadcrumbs = () => {
@@ -32,8 +34,18 @@ export default function Header() {
 
   return (
     <header className="h-16 bg-[#0F1115] border-b border-[#334155] flex items-center justify-between px-6 flex-shrink-0">
-      <div className="flex items-center gap-2 text-sm text-[#94A3B8]">
+      <div className="flex items-center gap-4 min-w-0">
+        {config?.logo_url ? (
+          <img
+            src={config.logo_url}
+            alt={config.razon_social || 'Logo Empresa'}
+            className="h-8 w-auto object-contain shrink-0"
+          />
+        ) : null}
+
+        <div className="flex items-center gap-2 text-sm text-[#94A3B8] min-w-0 overflow-x-auto whitespace-nowrap">
         {getBreadcrumbs()}
+        </div>
       </div>
       
       <button className="relative p-2 text-[#94A3B8] hover:text-[#E2E8F0] transition-colors rounded-full hover:bg-[#334155]/40 focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-2 focus:ring-offset-[#0F1115]">

@@ -1,15 +1,17 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { useQuoteDetail, useSaveQuote, useDeleteQuote } from '@/hooks/useQuotes';
-import { useClientsList } from '@/hooks/useClients';
+import { useClientsList, useActiveClientsList, clientsKeys } from '@/hooks/useClients';
 import { useSellersList } from '@/hooks/useSellers';
 import { useProductsList } from '@/hooks/useProducts';
 
 import ClientFormModal from '@/features/clients/ClientFormModal';
 import type { Client } from '@/services/clients.service';
-import type { QuoteFormData, QuoteLineItem, QuoteStatus } from '@/services/quotes.service';
+import type { QuoteFormData, QuoteStatus } from '@/services/quotes.service';
+import { useQuoteFormState } from './useQuoteFormState';
+import { formatCurrency, getClientDisplayName, validateQuoteForm } from './quoteForm.utils';
 
 export default function QuoteForm() {
   const navigate = useNavigate();
@@ -17,7 +19,8 @@ export default function QuoteForm() {
   const isEditing = Boolean(id);
 
   // ─── Server State (Hooks de Catálogos reales) ───────────────
-  const { data: clients = [], isLoading: loadingClients } = useClientsList();
+  const { data: activeClients = [], isLoading: loadingActiveClients } = useActiveClientsList();
+  const { data: allClients = [], isLoading: loadingAllClients } = useClientsList();
   const { data: sellers = [], isLoading: loadingSellers } = useSellersList();
   const { data: products = [], isLoading: loadingProducts } = useProductsList();
   const { data: existingQuote, isLoading: loadingQuote } = useQuoteDetail(id || null);
@@ -26,163 +29,44 @@ export default function QuoteForm() {
   const deleteQuoteMutation = useDeleteQuote();
   const queryClient = useQueryClient();
 
+  const loadingClients = loadingActiveClients || loadingAllClients;
   const loadingDropdowns = loadingClients || loadingSellers || loadingProducts;
   const loading = loadingDropdowns || (isEditing && loadingQuote);
 
-  // ─── UI State (Local form data) ─────────────────────────────
   const [error, setError] = useState<string | null>(null);
-
-  const [quoteData, setQuoteData] = useState<QuoteFormData>({
-    cliente_id: '',
-    vendedor_id: '',
-    origen: 'Manual',
-    fecha_emision: new Date().toISOString().split('T')[0],
-    fecha_validez: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    aplica_igv: true,
-    descuento_global_monto: 0,
-    observaciones_pdf: '',
-    subtotal: 0,
-    igv_monto: 0,
-    total_final: 0,
-    estado: 'Borrador',
-    lineas: []
-  });
-
-  const [lineItems, setLineItems] = useState<QuoteLineItem[]>([]);
-  const [initialized, setInitialized] = useState(false);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
 
-  // Filter active clients for the selector, but always include the current quote's client
-  const selectableClients = useMemo(() => {
-    const activeClients = clients.filter(c => c.activo);
-    // If editing and the assigned client is inactive, include it so the form doesn't break
-    if (quoteData.cliente_id) {
-      const currentClient = clients.find(c => c.id === quoteData.cliente_id);
-      if (currentClient && !currentClient.activo) {
-        return [currentClient, ...activeClients];
-      }
-    }
-    return activeClients;
-  }, [clients, quoteData.cliente_id]);
+  const {
+    quoteData,
+    lineItems,
+    totals,
+    selectableClients,
+    handleQuoteChange,
+    addLineItem,
+    removeLineItem,
+    updateLineItem,
+  } = useQuoteFormState({
+    isEditing,
+    loading,
+    existingQuote,
+    activeClients,
+    allClients,
+    products,
+  });
 
-  // ─── Initialize form from server data ───────────────────────
-  useEffect(() => {
-    if (initialized) return;
-    if (loading) return;
-
-    if (isEditing && existingQuote) {
-      const { cotizaciones_lineas, clientes, perfiles_usuario, ...headData } = existingQuote;
-      setQuoteData({
-        ...headData,
-        vendedor_id: headData.vendedor_id || '',
-        observaciones_pdf: headData.observaciones_pdf || '',
-        lineas: []
-      });
-      
-      const parsedLines = (cotizaciones_lineas || []).map(l => ({
-        ...l,
-        producto_id: l.producto_id || null
-      }));
-      setLineItems(parsedLines);
-
-    } else if (!isEditing) {
-      // New quote — add an initial empty line
-      setLineItems([{
-        producto_id: null,
-        nombre_producto_historico: '',
-        cantidad: 1,
-        precio_unitario: 0,
-        descuento_linea_monto: 0,
-        subtotal_linea: 0
-      }]);
-    }
-    setInitialized(true);
-  }, [loading, isEditing, existingQuote, initialized]);
-
-  // ─── Motor de Cálculos (Derived state) ──────────────────────
-  const totals = useMemo(() => {
-    let newSubtotal = 0;
-    lineItems.forEach(item => {
-      newSubtotal += item.subtotal_linea || 0;
-    });
-
-    const descuentoGlobal = Number(quoteData.descuento_global_monto) || 0;
-    const baseParaIgv = Math.max(0, newSubtotal - descuentoGlobal);
-    const newIgv = quoteData.aplica_igv ? baseParaIgv * 0.18 : 0;
-    const newTotal = baseParaIgv + newIgv;
-
-    return {
-      subtotal: newSubtotal,
-      igv_monto: newIgv,
-      total_final: newTotal
-    };
-  }, [lineItems, quoteData.aplica_igv, quoteData.descuento_global_monto]);
-
-  const currentDisplayId = isEditing && (quoteData as any).numero_correlativo
-    ? `Editando COT-${(quoteData as any).numero_correlativo}` 
+  const currentDisplayId = isEditing && existingQuote?.numero_correlativo
+    ? `Editando COT-${existingQuote.numero_correlativo}`
     : 'Nueva Cotización';
 
-  // ─── Event Handlers ─────────────────────────────────────────
-  const handleQuoteChange = (field: keyof QuoteFormData, value: string | number | boolean) => {
-    setQuoteData(prev => ({ ...prev, [field]: value }));
-  };
-
   const handleClientCreated = (newClient: Client) => {
-    queryClient.invalidateQueries({ queryKey: ['clients'] });
+    queryClient.invalidateQueries({ queryKey: clientsKeys.all() });
     handleQuoteChange('cliente_id', String(newClient.id));
   };
 
-  const addLineItem = () => {
-    setLineItems([...lineItems, {
-      producto_id: null,
-      nombre_producto_historico: '',
-      cantidad: 1,
-      precio_unitario: 0,
-      descuento_linea_monto: 0,
-      subtotal_linea: 0
-    }]);
-  };
-
-  const removeLineItem = (index: number) => {
-    const newLines = [...lineItems];
-    newLines.splice(index, 1);
-    setLineItems(newLines);
-  };
-
-  const updateLineItem = (index: number, field: keyof QuoteLineItem, value: string | number | null) => {
-    const newLines = [...lineItems];
-    const item = { ...newLines[index] };
-    
-    // @ts-ignore
-    item[field] = value;
-
-    if (field === 'producto_id' && value) {
-      const selectedProduct = products.find(p => p.id === value);
-      if (selectedProduct) {
-        item.nombre_producto_historico = selectedProduct.nombre;
-        item.precio_unitario = Number(selectedProduct.precio_base) || 0;
-      }
-    }
-
-    item.subtotal_linea = (Number(item.cantidad) * Number(item.precio_unitario)) - Number(item.descuento_linea_monto);
-    newLines[index] = item;
-    setLineItems(newLines);
-  };
-
   const handleSave = (status: QuoteStatus) => {
-    if (!quoteData.cliente_id) {
-      setError('Por favor selecciona un cliente de la lista.');
-      return;
-    }
-
-    if (!quoteData.vendedor_id) {
-      setError('Por favor asigna un vendedor a esta cotización.');
-      return;
-    }
-
-    const invalidLines = lineItems.some(l => l.nombre_producto_historico.trim() === '' || Number(l.cantidad) <= 0 || Number(l.precio_unitario) < 0);
-    if (invalidLines) {
-      setError('Asegúrate de que todas las líneas tengan nombre de producto y cantidades válidas (mayor a 0).');
+    const validationError = validateQuoteForm(quoteData, lineItems);
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
@@ -198,7 +82,7 @@ export default function QuoteForm() {
     };
 
     saveQuoteMutation.mutate(finalQuoteData, {
-      onSuccess: () => navigate('/cotizaciones'),
+      onSuccess: () => navigate('/'),
       onError: (err) => setError('Error al guardar cotización: ' + err.message)
     });
   };
@@ -209,22 +93,10 @@ export default function QuoteForm() {
     if (!confirmed) return;
 
     deleteQuoteMutation.mutate(id, {
-      onSuccess: () => navigate('/cotizaciones'),
+      onSuccess: () => navigate('/'),
       onError: (err) => setError('Error al eliminar: ' + err.message)
     });
   };
-
-  const getClientDisplayName = (client: Client) => {
-    let name: string;
-    if (client.razon_social && client.razon_social.trim() !== '') {
-      name = `${client.razon_social} (Doc: ${client.numero_documento || 'N/A'})`;
-    } else {
-      name = `${client.nombres_contacto || ''} ${client.apellidos_contacto || ''}`.trim() || 'Sin Nombre';
-    }
-    return client.activo ? name : `${name} — (Inactivo)`;
-  };
-
-  const formatCurrency = (val: number) => 'S/ ' + val.toFixed(2);
 
   const isSaving = saveQuoteMutation.isPending || deleteQuoteMutation.isPending;
 
@@ -240,7 +112,7 @@ export default function QuoteForm() {
         <div className="flex items-center gap-2 text-sm text-[#94A3B8]">
           <span className="hover:text-[#E2E8F0] cursor-pointer transition-colors" onClick={() => navigate('/')}>Inicio</span>
           <span className="text-[#334155]">/</span>
-          <span className="hover:text-[#E2E8F0] cursor-pointer transition-colors" onClick={() => navigate('/cotizaciones')}>Cotizaciones</span>
+          <span className="hover:text-[#E2E8F0] cursor-pointer transition-colors" onClick={() => navigate('/')}>Cotizaciones</span>
           <span className="text-[#334155]">/</span>
           <span className="text-[#E2E8F0] font-medium">{currentDisplayId}</span>
         </div>

@@ -37,7 +37,8 @@ CREATE TABLE empresa_configuracion (
     ruc VARCHAR(20) NOT NULL,
     direccion TEXT,
     cuentas_bancarias TEXT,
-    terminos_condiciones TEXT
+    terminos_condiciones TEXT,
+    logo_url TEXT -- URL pública del logo almacenado en Supabase Storage (bucket: company-assets)
 );
 
 -- 2. TABLA: Vendedores
@@ -61,7 +62,7 @@ CREATE TABLE productos (
     sku VARCHAR(50) UNIQUE,
     nombre VARCHAR(255) NOT NULL,
     descripcion TEXT,
-    categoria_id UUID REFERENCES categorias(id) ON DELETE SET NULL,
+    categoria_id UUID REFERENCES categorias(id) ON DELETE RESTRICT, -- RESTRICT: Impide borrar categorías con productos
     precio_base NUMERIC(10, 2) NOT NULL DEFAULT 0.00, -- Precios en Soles
     activo BOOLEAN DEFAULT true,
     fecha_creacion TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now())
@@ -75,10 +76,11 @@ CREATE TABLE clientes (
     razon_social VARCHAR(255), -- Puede estar vacío si es un cliente DNI (Persona Natural)
     nombres_contacto VARCHAR(100) NOT NULL, -- Obligatorio (Viene del First Name de Woo)
     apellidos_contacto VARCHAR(100) NOT NULL, -- Obligatorio (Viene del Last Name de Woo)
-    email VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE, -- UNIQUE: Previene correos duplicados
     telefono VARCHAR(50),
     direccion TEXT,
     comprobante_preferido VARCHAR(20) DEFAULT 'Factura',
+    activo BOOLEAN DEFAULT true, -- Para borrado lógico
     fecha_creacion TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now())
 );
 
