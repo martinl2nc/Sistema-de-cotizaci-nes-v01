@@ -23,6 +23,16 @@ export const getCategories = async (): Promise<Category[]> => {
   return data as Category[];
 };
 
+export const getCategoryProductCount = async (categoryId: string): Promise<number> => {
+  const { count, error } = await supabase
+    .from('productos')
+    .select('*', { count: 'exact', head: true })
+    .eq('categoria_id', categoryId);
+
+  if (error) throw new Error('Error al contar productos: ' + error.message);
+  return count || 0;
+};
+
 export const createCategory = async (category: CategoryFormData): Promise<Category> => {
   const { data, error } = await supabase
     .from('categorias')
@@ -53,6 +63,10 @@ export const deleteCategory = async (id: string): Promise<void> => {
     .eq('id', id);
 
   if (error) {
+    // Error 23503: foreign_key_violation (ON DELETE RESTRICT bloqueó la operación)
+    if (error.code === '23503') {
+      throw new Error('No se puede eliminar: esta categoría tiene productos asociados. Por favor, reasigna los productos a otra categoría primero.');
+    }
     throw new Error('Error al eliminar categoría: ' + error.message);
   }
 };

@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
-/// <reference path="./types/iconify.d.ts" />
+
+import './types/iconify';
 
 interface ImportMetaEnv {
   readonly VITE_SUPABASE_URL: string;

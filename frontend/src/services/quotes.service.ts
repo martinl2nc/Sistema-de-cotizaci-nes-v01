@@ -1,6 +1,83 @@
 import { supabase } from '@/config/supabaseClient';
 import type { Client } from './clients.service';
 
+type QuoteHeadPayload = Omit<QuoteFormData, 'id' | 'lineas'>;
+
+const isRpcFunctionMissing = (error: { code?: string; message?: string } | null) => {
+  if (!error) return false;
+  return error.code === 'PGRST202' || error.message?.includes('save_quote_atomic') || false;
+};
+
+const buildHeadPayload = (quoteData: QuoteFormData): QuoteHeadPayload => ({
+  cliente_id: quoteData.cliente_id,
+  vendedor_id: quoteData.vendedor_id || null,
+  origen: quoteData.origen,
+  woo_order_id: quoteData.woo_order_id ?? null,
+  fecha_emision: quoteData.fecha_emision,
+  fecha_validez: quoteData.fecha_validez,
+  estado: quoteData.estado,
+  observaciones_pdf: quoteData.observaciones_pdf || '',
+  aplica_igv: quoteData.aplica_igv,
+  subtotal: quoteData.subtotal,
+  descuento_global_monto: quoteData.descuento_global_monto,
+  igv_monto: quoteData.igv_monto,
+  total_final: quoteData.total_final,
+});
+
+const normalizeLineItems = (lineas: QuoteLineItem[]) =>
+  lineas.map((line) => ({
+    id: line.id || crypto.randomUUID(),
+    producto_id: line.producto_id || null,
+    nombre_producto_historico: line.nombre_producto_historico,
+    cantidad: line.cantidad,
+    precio_unitario: line.precio_unitario,
+    descuento_linea_monto: line.descuento_linea_monto,
+    subtotal_linea: line.subtotal_linea,
+  }));
+
+const saveQuoteLegacy = async (quoteData: QuoteFormData): Promise<string> => {
+  const { lineas } = quoteData;
+  const headData = buildHeadPayload(quoteData);
+  let finalQuoteId = quoteData.id;
+
+  if (finalQuoteId) {
+    const { error: headErr } = await supabase
+      .from('cotizaciones')
+      .update(headData)
+      .eq('id', finalQuoteId);
+    if (headErr) throw headErr;
+
+    const { error: delErr } = await supabase
+      .from('cotizaciones_lineas')
+      .delete()
+      .eq('cotizacion_id', finalQuoteId);
+    if (delErr) throw delErr;
+  } else {
+    const { data: newHead, error: headErr } = await supabase
+      .from('cotizaciones')
+      .insert([headData])
+      .select('id')
+      .single();
+    if (headErr) throw headErr;
+    finalQuoteId = newHead.id;
+  }
+
+  if (lineas && lineas.length > 0 && finalQuoteId) {
+    const lineasToInsert = normalizeLineItems(lineas).map((line) => ({
+      ...line,
+      cotizacion_id: finalQuoteId,
+    }));
+
+    const { error: linesErr } = await supabase
+      .from('cotizaciones_lineas')
+      .insert(lineasToInsert);
+    if (linesErr) throw linesErr;
+  }
+
+  if (!finalQuoteId) throw new Error('Failed to save quote header.');
+  return finalQuoteId;
+};
+
 export interface QuoteLineItem {
   id?: string;
   cotizacion_id?: string;
@@ -77,51 +154,28 @@ export const quotesService = {
   },
 
   async saveQuote(quoteData: QuoteFormData): Promise<Quote> {
-    const { lineas, ...headData } = quoteData;
-    let finalQuoteId = headData.id;
+    const headData = buildHeadPayload(quoteData);
+    const lineas = normalizeLineItems(quoteData.lineas || []);
 
-    if (finalQuoteId) {
-      // 1. Update Existing Quote Header
-      const { error: headErr } = await supabase
-        .from('cotizaciones')
-        .update(headData)
-        .eq('id', finalQuoteId);
-      if (headErr) throw headErr;
+    const { data: rpcResult, error: rpcError } = await supabase.rpc('save_quote_atomic', {
+      p_quote_id: quoteData.id ?? null,
+      p_head_data: headData,
+      p_lines: lineas,
+    });
 
-      // 2. Delete all existing lines (to rewrite them easily)
-      const { error: delErr } = await supabase
-        .from('cotizaciones_lineas')
-        .delete()
-        .eq('cotizacion_id', finalQuoteId);
-      if (delErr) throw delErr;
+    let finalQuoteId: string;
 
+    if (rpcError) {
+      if (isRpcFunctionMissing(rpcError)) {
+        finalQuoteId = await saveQuoteLegacy(quoteData);
+      } else {
+        throw rpcError;
+      }
     } else {
-      // 1. Insert New Quote Header
-      const { data: newHead, error: headErr } = await supabase
-        .from('cotizaciones')
-        .insert([headData])
-        .select()
-        .single();
-      if (headErr) throw headErr;
-      finalQuoteId = newHead.id;
+      finalQuoteId = rpcResult;
     }
 
-    // 3. Insert Lines mapped with cotizacion_id
-    if (lineas && lineas.length > 0 && finalQuoteId) {
-      const lineasToInsert = lineas.map(l => ({
-        ...l,
-        id: l.id || crypto.randomUUID(),
-        cotizacion_id: finalQuoteId
-      }));
-
-      const { error: linesErr } = await supabase
-        .from('cotizaciones_lineas')
-        .insert(lineasToInsert);
-      if (linesErr) throw linesErr;
-    }
-
-    // Return the complete saved quote
-    if (!finalQuoteId) throw new Error("Failed to save quote header.");
+    if (!finalQuoteId) throw new Error('Failed to save quote header.');
     return this.getQuoteById(finalQuoteId);
   },
 
