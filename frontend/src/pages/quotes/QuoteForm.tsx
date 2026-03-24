@@ -90,7 +90,7 @@ export default function QuoteForm() {
 
     saveQuoteMutation.mutate(finalQuoteData, {
       onSuccess: () => {
-        if (!skipNavigation) navigate('/');
+        if (!skipNavigation) navigate('/cotizaciones');
       },
       onError: (err) => setError('Error al guardar cotización: ' + err.message)
     });
@@ -161,7 +161,7 @@ export default function QuoteForm() {
       }
 
       // 5. Navegar a la lista
-      navigate('/');
+      navigate('/cotizaciones');
     } catch (err: any) {
       console.error(err);
       setError(err?.message || 'Error al guardar la cotización o generar el PDF.');
@@ -177,7 +177,7 @@ export default function QuoteForm() {
     if (!confirmed) return;
 
     deleteQuoteMutation.mutate(id, {
-      onSuccess: () => navigate('/'),
+      onSuccess: () => navigate('/cotizaciones'),
       onError: (err) => setError('Error al eliminar: ' + err.message)
     });
   };
@@ -196,7 +196,7 @@ export default function QuoteForm() {
         <div className="flex items-center gap-2 text-sm text-[#94A3B8]">
           <span className="hover:text-[#E2E8F0] cursor-pointer transition-colors" onClick={() => navigate('/')}>Inicio</span>
           <span className="text-[#334155]">/</span>
-          <span className="hover:text-[#E2E8F0] cursor-pointer transition-colors" onClick={() => navigate('/')}>Cotizaciones</span>
+          <span className="hover:text-[#E2E8F0] cursor-pointer transition-colors" onClick={() => navigate('/cotizaciones')}>Cotizaciones</span>
           <span className="text-[#334155]">/</span>
           <span className="text-[#E2E8F0] font-medium">{currentDisplayId}</span>
         </div>

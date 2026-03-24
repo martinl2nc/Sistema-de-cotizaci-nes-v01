@@ -9,6 +9,7 @@ export default function Sidebar() {
 
   const isActive = (path: string) => {
     if (path === '/') return location.pathname === '/';
+    if (path === '/cotizaciones') return location.pathname.startsWith('/cotizaciones');
     return location.pathname.startsWith(path);
   };
 
@@ -36,6 +37,18 @@ export default function Sidebar() {
             to="/"
             className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
               isActive('/')
+                ? 'bg-[#3B82F6] text-white shadow-sm'
+                : 'text-[#94A3B8] hover:text-[#E2E8F0] hover:bg-[#334155]/40'
+            }`}
+          >
+            <iconify-icon icon="solar:home-smile-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+            Dashboard
+          </Link>
+
+          <Link
+            to="/cotizaciones"
+            className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              isActive('/cotizaciones')
                 ? 'bg-[#3B82F6] text-white shadow-sm'
                 : 'text-[#94A3B8] hover:text-[#E2E8F0] hover:bg-[#334155]/40'
             }`}
