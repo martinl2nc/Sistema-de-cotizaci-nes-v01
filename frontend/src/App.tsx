@@ -5,6 +5,7 @@ import { AuthProvider } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 
 // Lazy loading following Vite best practices
+const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'));
 const QuotesList = lazy(() => import('@/pages/quotes/QuotesList'));
 const QuoteForm = lazy(() => import('@/pages/quotes/QuoteForm'));
 const ClientsPage = lazy(() => import('@/pages/admin/ClientsPage'));
@@ -25,7 +26,8 @@ function App() {
             {/* Layout Wraps Everything Inside y Protege que el usuario esté logueado */}
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<MainLayout />}>
-                <Route index element={<QuotesList />} />
+                <Route index element={<DashboardPage />} />
+                <Route path="cotizaciones" element={<QuotesList />} />
                 <Route path="cotizaciones/nueva" element={<QuoteForm />} />
                 <Route path="cotizaciones/editar/:id" element={<QuoteForm />} />
 
