@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { pdf } from '@react-pdf/renderer';
 
 import { useQuoteDetail, useSaveQuote, useDeleteQuote } from '@/hooks/useQuotes';
 import { useClientsList, useActiveClientsList, clientsKeys } from '@/hooks/useClients';
 import { useSellersList } from '@/hooks/useSellers';
 import { useProductsList } from '@/hooks/useProducts';
+import { useCompanyConfig } from '@/hooks/useCompanyConfig';
 
 import ClientFormModal from '@/features/clients/ClientFormModal';
 import type { Client } from '@/services/clients.service';
 import type { QuoteFormData, QuoteStatus } from '@/services/quotes.service';
 import { useQuoteFormState } from './useQuoteFormState';
 import { formatCurrency, getClientDisplayName, validateQuoteForm } from './quoteForm.utils';
+import { QuotePDFDocument } from './QuotePDFTemplate';
 
 export default function QuoteForm() {
   const navigate = useNavigate();
@@ -24,6 +27,7 @@ export default function QuoteForm() {
   const { data: sellers = [], isLoading: loadingSellers } = useSellersList();
   const { data: products = [], isLoading: loadingProducts } = useProductsList();
   const { data: existingQuote, isLoading: loadingQuote } = useQuoteDetail(id || null);
+  const { data: companyConfig = null } = useCompanyConfig();
   
   const saveQuoteMutation = useSaveQuote();
   const deleteQuoteMutation = useDeleteQuote();
@@ -35,6 +39,7 @@ export default function QuoteForm() {
 
   const [error, setError] = useState<string | null>(null);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   const {
     quoteData,
@@ -63,7 +68,7 @@ export default function QuoteForm() {
     handleQuoteChange('cliente_id', String(newClient.id));
   };
 
-  const handleSave = (status: QuoteStatus) => {
+  const handleSave = (status: QuoteStatus, skipNavigation = false) => {
     const validationError = validateQuoteForm(quoteData, lineItems);
     if (validationError) {
       setError(validationError);
@@ -82,10 +87,106 @@ export default function QuoteForm() {
     };
 
     saveQuoteMutation.mutate(finalQuoteData, {
-      onSuccess: () => navigate('/'),
+      onSuccess: () => {
+        if (!skipNavigation) navigate('/');
+      },
       onError: (err) => setError('Error al guardar cotización: ' + err.message)
     });
   };
+
+  const [sendStatus, setSendStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+
+  const handleGeneratePDF = async () => {
+    const validationError = validateQuoteForm(quoteData, lineItems);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+    setError(null);
+    setSendStatus('idle');
+    
+    try {
+      const client = allClients.find(c => c.id === quoteData.cliente_id) || null;
+      const seller = sellers.find(s => s.id === quoteData.vendedor_id);
+      const quoteIdStr = currentDisplayId.includes('Editando') 
+        ? currentDisplayId.replace('Editando ', '') 
+        : `COT-Borrador`;
+
+      const doc = (
+        <QuotePDFDocument 
+          quoteData={quoteData}
+          totals={totals}
+          lineItems={lineItems}
+          client={client}
+          sellerName={seller?.nombre || ''}
+          quoteIdStr={quoteIdStr}
+          companyConfig={companyConfig}
+        />
+      );
+
+      const asPdf = pdf(doc);
+      const blob = await asPdf.toBlob();
+      
+      // 1. Descarga local para el vendedor
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${quoteIdStr}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      // 2. Enviar al webhook de n8n (base64)
+      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
+      if (webhookUrl && client?.email) {
+        setSendStatus('sending');
+        
+        // Convertir blob a base64
+        const arrayBuffer = await blob.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        let binary = '';
+        uint8Array.forEach(byte => { binary += String.fromCharCode(byte); });
+        const pdfBase64 = btoa(binary);
+
+        const clientName = client.razon_social?.trim() 
+          || `${client.nombres_contacto || ''} ${client.apellidos_contacto || ''}`.trim()
+          || 'Cliente';
+
+        const payload = {
+          pdfBase64,
+          pdfFilename: `${quoteIdStr}.pdf`,
+          correoCliente: client.email,
+          nombreCliente: clientName,
+          numeroCorrelativo: quoteIdStr,
+          vendedorNombre: seller?.nombre || 'No asignado',
+          totalFinal: totals.total_final,
+          fechaEmision: quoteData.fecha_emision,
+        };
+
+        const response = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) throw new Error(`Webhook respondió con status ${response.status}`);
+        setSendStatus('success');
+      }
+
+      // 3. Guardar estado en BD
+      handleSave('PDF Generado', false);
+    } catch (err) {
+      console.error(err);
+      setSendStatus('error');
+      setError('PDF descargado, pero ocurrió un error al enviarlo por correo. Revisa la consola.');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
 
   const handleDelete = () => {
     if (!id) return;
@@ -98,7 +199,7 @@ export default function QuoteForm() {
     });
   };
 
-  const isSaving = saveQuoteMutation.isPending || deleteQuoteMutation.isPending;
+  const isSaving = saveQuoteMutation.isPending || deleteQuoteMutation.isPending || isGeneratingPDF;
 
   // ─── Loading / Error states ─────────────────────────────────
   if (loading) {
@@ -340,6 +441,26 @@ export default function QuoteForm() {
           </div>
 
           <div className="flex w-full sm:w-auto flex-col sm:flex-row gap-3 justify-end items-center">
+            {/* Send status indicator */}
+            {sendStatus === 'sending' && (
+              <span className="text-xs text-[#94A3B8] flex items-center gap-1.5 animate-pulse">
+                <iconify-icon icon="solar:spinner-linear" class="animate-spin text-[#3B82F6]"></iconify-icon>
+                Enviando por correo...
+              </span>
+            )}
+            {sendStatus === 'success' && (
+              <span className="text-xs text-[#10B981] flex items-center gap-1.5">
+                <iconify-icon icon="solar:check-circle-linear"></iconify-icon>
+                Correo enviado al cliente
+              </span>
+            )}
+            {sendStatus === 'error' && (
+              <span className="text-xs text-[#F59E0B] flex items-center gap-1.5">
+                <iconify-icon icon="solar:danger-triangle-linear"></iconify-icon>
+                PDF descargado, fallo el envío por correo
+              </span>
+            )}
+
             {isEditing && (
               <button 
                 onClick={handleDelete}
@@ -357,12 +478,12 @@ export default function QuoteForm() {
               <iconify-icon icon="solar:diskette-linear" class="text-lg"></iconify-icon> Guardar Borrador
             </button>
             <button
-              onClick={() => handleSave('PDF Generado')}
+              onClick={handleGeneratePDF}
               disabled={isSaving}
               className="bg-[#10B981] hover:bg-[#059669] text-white px-6 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-colors disabled:opacity-50 flex items-center gap-2"
             >
-              <iconify-icon icon="solar:printer-minimalistic-linear" class="text-lg"></iconify-icon>
-              {isSaving ? 'Procesando...' : 'Generar y Enviar PDF'}
+              <iconify-icon icon="solar:letter-linear" class="text-lg"></iconify-icon>
+              {isGeneratingPDF ? 'Generando PDF...' : isSaving ? 'Procesando...' : 'Generar y Enviar PDF'}
             </button>
           </div>
         </div>
