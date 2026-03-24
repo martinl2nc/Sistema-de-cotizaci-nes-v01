@@ -2,6 +2,7 @@ import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/render
 import type { QuoteFormData, QuoteLineItem } from '@/services/quotes.service';
 import type { Client } from '@/services/clients.service';
 import type { CompanyConfig } from '@/services/companyConfig.service';
+import type { Product } from '@/services/products.service';
 import { formatCurrency, type QuoteTotals } from './quoteForm.utils';
 
 const S = StyleSheet.create({
@@ -42,11 +43,10 @@ const S = StyleSheet.create({
   tableRow: { flexDirection: 'row', borderBottom: '1pt solid #E5E7EB', paddingVertical: 10, paddingHorizontal: 8 },
   tdCell: { fontSize: 9, textAlign: 'center', color: '#111827' },
   colQty:   { width: '10%' },
-  colSize:  { width: '12%' },
-  colDesc:  { width: '38%', textAlign: 'left' },
-  colCode:  { width: '12%' },
-  colPrice: { width: '14%' },
-  colSub:   { width: '14%' },
+  colDesc:  { width: '44%', textAlign: 'left' },
+  colCode:  { width: '14%' },
+  colPrice: { width: '16%' },
+  colSub:   { width: '16%' },
 
   /* ─── Totals ─── */
   totalsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
@@ -89,6 +89,7 @@ export interface QuotePDFTemplateProps {
   sellerName: string;
   quoteIdStr: string;
   companyConfig: CompanyConfig | null;
+  products: Product[];
 }
 
 // Bank account type expected in cuentas_bancarias JSON
@@ -98,7 +99,7 @@ interface BankAccount {
   cuentas: { moneda: string; numero: string }[];
 }
 
-export const QuotePDFDocument = ({ quoteData, totals, lineItems, client, sellerName, quoteIdStr, companyConfig }: QuotePDFTemplateProps) => {
+export const QuotePDFDocument = ({ quoteData, totals, lineItems, client, sellerName, quoteIdStr, companyConfig, products }: QuotePDFTemplateProps) => {
   const formatDate = (d: string) => {
     if (!d) return '';
     return new Intl.DateTimeFormat('es-PE', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(d));
@@ -188,7 +189,6 @@ export const QuotePDFDocument = ({ quoteData, totals, lineItems, client, sellerN
           <View style={S.tableWrapper}>
             <View style={S.tableHead} wrap={false}>
               <Text style={[S.thCell, S.colQty]}>Cantidad</Text>
-              <Text style={[S.thCell, S.colSize]}>Talla</Text>
               <Text style={[S.thCell, S.colDesc]}>Nombre del Producto</Text>
               <Text style={[S.thCell, S.colCode]}>Código</Text>
               <Text style={[S.thCell, S.colPrice]}>Precio U.</Text>
@@ -197,9 +197,10 @@ export const QuotePDFDocument = ({ quoteData, totals, lineItems, client, sellerN
             {lineItems.map((item, idx) => (
               <View key={idx} style={[S.tableRow, idx === lineItems.length - 1 ? { borderBottomWidth: 0 } : {}]} wrap={false}>
                 <Text style={[S.tdCell, S.colQty]}>{item.cantidad}</Text>
-                <Text style={[S.tdCell, S.colSize]}>-</Text>
                 <Text style={[S.tdCell, S.colDesc]}>{item.nombre_producto_historico}</Text>
-                <Text style={[S.tdCell, S.colCode]}>-</Text>
+                <Text style={[S.tdCell, S.colCode]}>
+                  {item.producto_id ? products.find(p => p.id === item.producto_id)?.sku || '-' : '-'}
+                </Text>
                 <Text style={[S.tdCell, S.colPrice]}>{Number(item.precio_unitario).toFixed(2)}</Text>
                 <Text style={[S.tdCell, S.colSub]}>{Number(item.subtotal_linea).toFixed(2)}</Text>
               </View>

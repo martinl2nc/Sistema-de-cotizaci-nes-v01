@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { pdf } from '@react-pdf/renderer';
 
-import { useQuoteDetail, useSaveQuote, useDeleteQuote } from '@/hooks/useQuotes';
+import { useQuoteDetail, useSaveQuote, useDeleteQuote, useSendQuoteWebhook } from '@/hooks/useQuotes';
 import { useClientsList, useActiveClientsList, clientsKeys } from '@/hooks/useClients';
 import { useSellersList } from '@/hooks/useSellers';
 import { useProductsList } from '@/hooks/useProducts';
@@ -12,8 +12,9 @@ import { useCompanyConfig } from '@/hooks/useCompanyConfig';
 import ClientFormModal from '@/features/clients/ClientFormModal';
 import type { Client } from '@/services/clients.service';
 import type { QuoteFormData, QuoteStatus } from '@/services/quotes.service';
+import { isWebhookConfigured, buildWebhookPayload } from '@/services/webhook.service';
 import { useQuoteFormState } from './useQuoteFormState';
-import { formatCurrency, getClientDisplayName, validateQuoteForm } from './quoteForm.utils';
+import { formatCurrency, getClientDisplayName, validateQuoteForm, blobToBase64, downloadBlob } from './quoteForm.utils';
 import { QuotePDFDocument } from './QuotePDFTemplate';
 
 export default function QuoteForm() {
@@ -31,6 +32,7 @@ export default function QuoteForm() {
   
   const saveQuoteMutation = useSaveQuote();
   const deleteQuoteMutation = useDeleteQuote();
+  const webhookMutation = useSendQuoteWebhook();
   const queryClient = useQueryClient();
 
   const loadingClients = loadingActiveClients || loadingAllClients;
@@ -94,8 +96,6 @@ export default function QuoteForm() {
     });
   };
 
-  const [sendStatus, setSendStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
-
   const handleGeneratePDF = async () => {
     const validationError = validateQuoteForm(quoteData, lineItems);
     if (validationError) {
@@ -105,83 +105,66 @@ export default function QuoteForm() {
 
     setIsGeneratingPDF(true);
     setError(null);
-    setSendStatus('idle');
-    
+    webhookMutation.reset();
+
     try {
       const client = allClients.find(c => c.id === quoteData.cliente_id) || null;
       const seller = sellers.find(s => s.id === quoteData.vendedor_id);
-      const quoteIdStr = currentDisplayId.includes('Editando') 
-        ? currentDisplayId.replace('Editando ', '') 
-        : `COT-Borrador`;
 
+      // 1. Guardar primero en BD para obtener el correlativo real
+      const finalQuoteData: QuoteFormData = {
+        ...quoteData,
+        estado: 'PDF Generado',
+        vendedor_id: quoteData.vendedor_id || null,
+        subtotal: totals.subtotal,
+        igv_monto: totals.igv_monto,
+        total_final: totals.total_final,
+        lineas: lineItems
+      };
+      
+      const savedQuote = await saveQuoteMutation.mutateAsync(finalQuoteData);
+      
+      // En este punto, la BD ya nos devolvió el ID real
+      const quoteIdStr = `COT-${savedQuote.numero_correlativo}`;
+
+      // 2. Renderizar PDF con el número real
       const doc = (
-        <QuotePDFDocument 
-          quoteData={quoteData}
+        <QuotePDFDocument
+          quoteData={{ ...quoteData, id: savedQuote.id }}
           totals={totals}
           lineItems={lineItems}
           client={client}
           sellerName={seller?.nombre || ''}
           quoteIdStr={quoteIdStr}
           companyConfig={companyConfig}
+          products={products}
         />
       );
+      const blob = await pdf(doc).toBlob();
 
-      const asPdf = pdf(doc);
-      const blob = await asPdf.toBlob();
-      
-      // 1. Descarga local para el vendedor
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${quoteIdStr}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      // 2. Enviar al webhook de n8n (base64)
-      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL;
-      if (webhookUrl && client?.email) {
-        setSendStatus('sending');
-        
-        // Convertir blob a base64
-        const arrayBuffer = await blob.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
-        let binary = '';
-        uint8Array.forEach(byte => { binary += String.fromCharCode(byte); });
-        const pdfBase64 = btoa(binary);
+      // 3. Descarga local
+      downloadBlob(blob, `${quoteIdStr}.pdf`);
 
-        const clientName = client.razon_social?.trim() 
-          || `${client.nombres_contacto || ''} ${client.apellidos_contacto || ''}`.trim()
-          || 'Cliente';
-
-        const payload = {
+      // 4. Enviar al webhook de n8n (si está configurado y el cliente tiene email)
+      if (isWebhookConfigured() && client?.email) {
+        const pdfBase64 = await blobToBase64(blob);
+        const payload = buildWebhookPayload({
           pdfBase64,
           pdfFilename: `${quoteIdStr}.pdf`,
-          correoCliente: client.email,
-          nombreCliente: clientName,
-          numeroCorrelativo: quoteIdStr,
-          vendedorNombre: seller?.nombre || 'No asignado',
+          client,
+          sellerName: seller?.nombre || 'No asignado',
+          quoteIdStr,
           totalFinal: totals.total_final,
           fechaEmision: quoteData.fecha_emision,
-        };
-
-        const response = await fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
         });
-
-        if (!response.ok) throw new Error(`Webhook respondió con status ${response.status}`);
-        setSendStatus('success');
+        if (payload) await webhookMutation.mutateAsync(payload);
       }
 
-      // 3. Guardar estado en BD
-      handleSave('PDF Generado', false);
-    } catch (err) {
+      // 5. Navegar a la lista
+      navigate('/');
+    } catch (err: any) {
       console.error(err);
-      setSendStatus('error');
-      setError('PDF descargado, pero ocurrió un error al enviarlo por correo. Revisa la consola.');
+      setError(err?.message || 'Error al guardar la cotización o generar el PDF.');
     } finally {
       setIsGeneratingPDF(false);
     }
@@ -442,19 +425,19 @@ export default function QuoteForm() {
 
           <div className="flex w-full sm:w-auto flex-col sm:flex-row gap-3 justify-end items-center">
             {/* Send status indicator */}
-            {sendStatus === 'sending' && (
+            {webhookMutation.isPending && (
               <span className="text-xs text-[#94A3B8] flex items-center gap-1.5 animate-pulse">
                 <iconify-icon icon="solar:spinner-linear" class="animate-spin text-[#3B82F6]"></iconify-icon>
                 Enviando por correo...
               </span>
             )}
-            {sendStatus === 'success' && (
+            {webhookMutation.isSuccess && (
               <span className="text-xs text-[#10B981] flex items-center gap-1.5">
                 <iconify-icon icon="solar:check-circle-linear"></iconify-icon>
                 Correo enviado al cliente
               </span>
             )}
-            {sendStatus === 'error' && (
+            {webhookMutation.isError && (
               <span className="text-xs text-[#F59E0B] flex items-center gap-1.5">
                 <iconify-icon icon="solar:danger-triangle-linear"></iconify-icon>
                 PDF descargado, fallo el envío por correo

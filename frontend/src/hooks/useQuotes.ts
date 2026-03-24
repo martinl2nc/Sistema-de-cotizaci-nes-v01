@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { quotesService } from '@/services/quotes.service';
 import type { QuoteFormData, QuoteStatus, Quote } from '@/services/quotes.service';
+import { sendQuoteToWebhook } from '@/services/webhook.service';
+import type { SendQuoteWebhookParams } from '@/services/webhook.service';
 
 export const quotesKeys = {
   all: ['quotes'] as const,
@@ -82,5 +84,11 @@ export function useUpdateQuoteStatus() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: quotesKeys.list() });
     },
+  });
+}
+
+export function useSendQuoteWebhook() {
+  return useMutation({
+    mutationFn: (params: SendQuoteWebhookParams) => sendQuoteToWebhook(params),
   });
 }
