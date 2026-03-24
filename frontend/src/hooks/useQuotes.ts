@@ -87,6 +87,31 @@ export function useUpdateQuoteStatus() {
   });
 }
 
+export function useUpdateQuoteFollowup() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, value }: { id: string; value: boolean }) =>
+      quotesService.updateQuoteFollowup(id, value),
+    onMutate: async ({ id, value }) => {
+      await queryClient.cancelQueries({ queryKey: quotesKeys.list() });
+      const previousQuotes = queryClient.getQueryData<Quote[]>(quotesKeys.list());
+      queryClient.setQueryData<Quote[]>(quotesKeys.list(), (old) =>
+        old?.map(q => q.id === id ? { ...q, seguimiento_automatico: value } : q) ?? []
+      );
+      return { previousQuotes };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousQuotes) {
+        queryClient.setQueryData(quotesKeys.list(), context.previousQuotes);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: quotesKeys.list() });
+    },
+  });
+}
+
 export function useSendQuoteWebhook() {
   return useMutation({
     mutationFn: (params: SendQuoteWebhookParams) => sendQuoteToWebhook(params),

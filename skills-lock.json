@@ -31,6 +31,11 @@
       "sourceType": "github",
       "computedHash": "3e28711cdf2a53dae95f3b79b7f329304f68c7bb97c1778badf1f30ff6d897af"
     },
+    "n8n-workflow-patterns": {
+      "source": "czlonkowski/n8n-skills",
+      "sourceType": "github",
+      "computedHash": "52998bacfadee37835bfa434d08a23c76fa04092f757660708fe014c3594877c"
+    },
     "openapi-expert": {
       "source": "personamanagmentlayer/pcl",
       "sourceType": "github",

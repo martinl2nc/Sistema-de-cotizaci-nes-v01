@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuotesList, useUpdateQuoteStatus, useDeleteQuote } from '@/hooks/useQuotes';
+import { useQuotesList, useUpdateQuoteStatus, useDeleteQuote, useUpdateQuoteFollowup } from '@/hooks/useQuotes';
 import { useSellersList } from '@/hooks/useSellers';
 import type { Quote, QuoteStatus } from '@/services/quotes.service';
 
@@ -12,6 +12,7 @@ export default function QuotesList() {
   const { data: sellers = [] } = useSellersList();
   const updateStatusMutation = useUpdateQuoteStatus();
   const deleteMutation = useDeleteQuote();
+  const updateFollowupMutation = useUpdateQuoteFollowup();
 
   // ─── UI State (local only) ──────────────────────────────────
   const [searchTerm, setSearchTerm] = useState('');
@@ -192,13 +193,14 @@ export default function QuotesList() {
                 <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[160px]">Vendedor</th>
                 <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[120px] text-right">Total</th>
                 <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[140px]">Estado</th>
+                <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[90px] text-center" title="Seguimiento automático por email (solo cotizaciones Enviadas)">Seguim.</th>
                 <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[200px] text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#334155] bg-[#181B21]">
               {isLoading && (
                 <tr>
-                  <td colSpan={7} className="px-5 py-8 text-center text-[#94A3B8] text-sm">
+                  <td colSpan={8} className="px-5 py-8 text-center text-[#94A3B8] text-sm">
                     <div className="flex items-center justify-center gap-2">
                       <iconify-icon icon="solar:spinner-linear" class="animate-spin text-xl text-[#3B82F6]"></iconify-icon>
                       Cargando cotizaciones...
@@ -209,7 +211,7 @@ export default function QuotesList() {
               
               {!isLoading && isError && (
                 <tr>
-                  <td colSpan={7} className="px-5 py-8 text-center text-red-400 text-sm">
+                  <td colSpan={8} className="px-5 py-8 text-center text-red-400 text-sm">
                     {error instanceof Error ? error.message : 'Error desconocido'}
                   </td>
                 </tr>
@@ -217,7 +219,7 @@ export default function QuotesList() {
 
               {!isLoading && !isError && filteredQuotes.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-5 py-8 text-center text-[#94A3B8] text-sm">
+                  <td colSpan={8} className="px-5 py-8 text-center text-[#94A3B8] text-sm">
                     No se encontraron cotizaciones con los filtros aplicados.
                   </td>
                 </tr>
@@ -246,6 +248,20 @@ export default function QuotesList() {
                       <option value="Enviada" className="bg-[#181B21]">Enviada</option>
                       <option value="Cancelada" className="bg-[#181B21]">Cancelada</option>
                     </select>
+                  </td>
+                  <td className="px-5 py-3.5 text-center">
+                    {quote.estado === 'Enviada' ? (
+                      <input
+                        type="checkbox"
+                        checked={quote.seguimiento_automatico ?? true}
+                        onChange={() => updateFollowupMutation.mutate({ id: quote.id, value: !(quote.seguimiento_automatico ?? true) })}
+                        disabled={updateFollowupMutation.isPending}
+                        title={quote.seguimiento_automatico ? 'Seguimiento activo — click para desactivar' : 'Seguimiento inactivo — click para activar'}
+                        className="w-4 h-4 rounded accent-[#A855F7] cursor-pointer disabled:opacity-50"
+                      />
+                    ) : (
+                      <span className="text-[#334155]">—</span>
+                    )}
                   </td>
                   <td className="px-5 py-3.5 text-right flex items-center justify-end gap-2">
                     <button 
