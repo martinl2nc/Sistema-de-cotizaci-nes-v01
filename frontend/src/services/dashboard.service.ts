@@ -125,7 +125,7 @@ export const dashboardService = {
   async getTopClientes(limit = 5, vendedorId?: string | null): Promise<TopCliente[]> {
     let query = supabase
       .from('cotizaciones')
-      .select('total_final, clientes(razon_social)')
+      .select('total_final, clientes(razon_social, nombres_contacto, apellidos_contacto)')
       .neq('estado', 'Cancelada');
     if (vendedorId) query = query.eq('vendedor_id', vendedorId);
 
@@ -133,7 +133,9 @@ export const dashboardService = {
 
     const map: Record<string, { total: number; count: number }> = {};
     (data as any[])?.forEach(q => {
-      const nombre = q.clientes?.razon_social ?? 'Sin nombre';
+      const nombre = q.clientes?.razon_social?.trim()
+        || `${q.clientes?.nombres_contacto || ''} ${q.clientes?.apellidos_contacto || ''}`.trim()
+        || 'Sin nombre';
       if (!map[nombre]) map[nombre] = { total: 0, count: 0 };
       map[nombre].total += q.total_final ?? 0;
       map[nombre].count++;
