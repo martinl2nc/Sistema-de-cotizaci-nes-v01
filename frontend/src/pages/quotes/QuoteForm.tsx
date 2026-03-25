@@ -1,17 +1,21 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { pdf } from '@react-pdf/renderer';
 
-import { useQuoteDetail, useSaveQuote, useDeleteQuote } from '@/hooks/useQuotes';
+import { useQuoteDetail, useSaveQuote, useDeleteQuote, useSendQuoteWebhook } from '@/hooks/useQuotes';
 import { useClientsList, useActiveClientsList, clientsKeys } from '@/hooks/useClients';
 import { useSellersList } from '@/hooks/useSellers';
 import { useProductsList } from '@/hooks/useProducts';
+import { useCompanyConfig } from '@/hooks/useCompanyConfig';
 
 import ClientFormModal from '@/features/clients/ClientFormModal';
 import type { Client } from '@/services/clients.service';
 import type { QuoteFormData, QuoteStatus } from '@/services/quotes.service';
+import { isWebhookConfigured, buildWebhookPayload } from '@/services/webhook.service';
 import { useQuoteFormState } from './useQuoteFormState';
-import { formatCurrency, getClientDisplayName, validateQuoteForm } from './quoteForm.utils';
+import { formatCurrency, getClientDisplayName, validateQuoteForm, blobToBase64, downloadBlob } from './quoteForm.utils';
+import { QuotePDFDocument } from './QuotePDFTemplate';
 
 export default function QuoteForm() {
   const navigate = useNavigate();
@@ -24,9 +28,11 @@ export default function QuoteForm() {
   const { data: sellers = [], isLoading: loadingSellers } = useSellersList();
   const { data: products = [], isLoading: loadingProducts } = useProductsList();
   const { data: existingQuote, isLoading: loadingQuote } = useQuoteDetail(id || null);
+  const { data: companyConfig = null } = useCompanyConfig();
   
   const saveQuoteMutation = useSaveQuote();
   const deleteQuoteMutation = useDeleteQuote();
+  const webhookMutation = useSendQuoteWebhook();
   const queryClient = useQueryClient();
 
   const loadingClients = loadingActiveClients || loadingAllClients;
@@ -35,6 +41,7 @@ export default function QuoteForm() {
 
   const [error, setError] = useState<string | null>(null);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   const {
     quoteData,
@@ -63,7 +70,7 @@ export default function QuoteForm() {
     handleQuoteChange('cliente_id', String(newClient.id));
   };
 
-  const handleSave = (status: QuoteStatus) => {
+  const handleSave = (status: QuoteStatus, skipNavigation = false) => {
     const validationError = validateQuoteForm(quoteData, lineItems);
     if (validationError) {
       setError(validationError);
@@ -82,10 +89,87 @@ export default function QuoteForm() {
     };
 
     saveQuoteMutation.mutate(finalQuoteData, {
-      onSuccess: () => navigate('/'),
+      onSuccess: () => {
+        if (!skipNavigation) navigate('/cotizaciones');
+      },
       onError: (err) => setError('Error al guardar cotización: ' + err.message)
     });
   };
+
+  const handleGeneratePDF = async () => {
+    const validationError = validateQuoteForm(quoteData, lineItems);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+    setError(null);
+    webhookMutation.reset();
+
+    try {
+      const client = allClients.find(c => c.id === quoteData.cliente_id) || null;
+      const seller = sellers.find(s => s.id === quoteData.vendedor_id);
+
+      // 1. Guardar primero en BD para obtener el correlativo real
+      const finalQuoteData: QuoteFormData = {
+        ...quoteData,
+        estado: 'PDF Generado',
+        vendedor_id: quoteData.vendedor_id || null,
+        subtotal: totals.subtotal,
+        igv_monto: totals.igv_monto,
+        total_final: totals.total_final,
+        lineas: lineItems
+      };
+      
+      const savedQuote = await saveQuoteMutation.mutateAsync(finalQuoteData);
+      
+      // En este punto, la BD ya nos devolvió el ID real
+      const quoteIdStr = `COT-${savedQuote.numero_correlativo}`;
+
+      // 2. Renderizar PDF con el número real
+      const doc = (
+        <QuotePDFDocument
+          quoteData={{ ...quoteData, id: savedQuote.id }}
+          totals={totals}
+          lineItems={lineItems}
+          client={client}
+          sellerName={seller?.nombre || ''}
+          quoteIdStr={quoteIdStr}
+          companyConfig={companyConfig}
+          products={products}
+        />
+      );
+      const blob = await pdf(doc).toBlob();
+
+      // 3. Descarga local
+      downloadBlob(blob, `${quoteIdStr}.pdf`);
+
+      // 4. Enviar al webhook de n8n (si está configurado y el cliente tiene email)
+      if (isWebhookConfigured() && client?.email) {
+        const pdfBase64 = await blobToBase64(blob);
+        const payload = buildWebhookPayload({
+          pdfBase64,
+          pdfFilename: `${quoteIdStr}.pdf`,
+          client,
+          sellerName: seller?.nombre || 'No asignado',
+          quoteIdStr,
+          totalFinal: totals.total_final,
+          fechaEmision: quoteData.fecha_emision,
+        });
+        if (payload) await webhookMutation.mutateAsync(payload);
+      }
+
+      // 5. Navegar a la lista
+      navigate('/cotizaciones');
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.message || 'Error al guardar la cotización o generar el PDF.');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
 
   const handleDelete = () => {
     if (!id) return;
@@ -93,12 +177,12 @@ export default function QuoteForm() {
     if (!confirmed) return;
 
     deleteQuoteMutation.mutate(id, {
-      onSuccess: () => navigate('/'),
+      onSuccess: () => navigate('/cotizaciones'),
       onError: (err) => setError('Error al eliminar: ' + err.message)
     });
   };
 
-  const isSaving = saveQuoteMutation.isPending || deleteQuoteMutation.isPending;
+  const isSaving = saveQuoteMutation.isPending || deleteQuoteMutation.isPending || isGeneratingPDF;
 
   // ─── Loading / Error states ─────────────────────────────────
   if (loading) {
@@ -112,7 +196,7 @@ export default function QuoteForm() {
         <div className="flex items-center gap-2 text-sm text-[#94A3B8]">
           <span className="hover:text-[#E2E8F0] cursor-pointer transition-colors" onClick={() => navigate('/')}>Inicio</span>
           <span className="text-[#334155]">/</span>
-          <span className="hover:text-[#E2E8F0] cursor-pointer transition-colors" onClick={() => navigate('/')}>Cotizaciones</span>
+          <span className="hover:text-[#E2E8F0] cursor-pointer transition-colors" onClick={() => navigate('/cotizaciones')}>Cotizaciones</span>
           <span className="text-[#334155]">/</span>
           <span className="text-[#E2E8F0] font-medium">{currentDisplayId}</span>
         </div>
@@ -340,6 +424,26 @@ export default function QuoteForm() {
           </div>
 
           <div className="flex w-full sm:w-auto flex-col sm:flex-row gap-3 justify-end items-center">
+            {/* Send status indicator */}
+            {webhookMutation.isPending && (
+              <span className="text-xs text-[#94A3B8] flex items-center gap-1.5 animate-pulse">
+                <iconify-icon icon="solar:spinner-linear" class="animate-spin text-[#3B82F6]"></iconify-icon>
+                Enviando por correo...
+              </span>
+            )}
+            {webhookMutation.isSuccess && (
+              <span className="text-xs text-[#10B981] flex items-center gap-1.5">
+                <iconify-icon icon="solar:check-circle-linear"></iconify-icon>
+                Correo enviado al cliente
+              </span>
+            )}
+            {webhookMutation.isError && (
+              <span className="text-xs text-[#F59E0B] flex items-center gap-1.5">
+                <iconify-icon icon="solar:danger-triangle-linear"></iconify-icon>
+                PDF descargado, fallo el envío por correo
+              </span>
+            )}
+
             {isEditing && (
               <button 
                 onClick={handleDelete}
@@ -357,12 +461,12 @@ export default function QuoteForm() {
               <iconify-icon icon="solar:diskette-linear" class="text-lg"></iconify-icon> Guardar Borrador
             </button>
             <button
-              onClick={() => handleSave('PDF Generado')}
+              onClick={handleGeneratePDF}
               disabled={isSaving}
               className="bg-[#10B981] hover:bg-[#059669] text-white px-6 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-colors disabled:opacity-50 flex items-center gap-2"
             >
-              <iconify-icon icon="solar:printer-minimalistic-linear" class="text-lg"></iconify-icon>
-              {isSaving ? 'Procesando...' : 'Generar y Enviar PDF'}
+              <iconify-icon icon="solar:letter-linear" class="text-lg"></iconify-icon>
+              {isGeneratingPDF ? 'Generando PDF...' : isSaving ? 'Procesando...' : 'Generar y Enviar PDF'}
             </button>
           </div>
         </div>

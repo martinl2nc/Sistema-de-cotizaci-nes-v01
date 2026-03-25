@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { quotesService } from '@/services/quotes.service';
 import type { QuoteFormData, QuoteStatus, Quote } from '@/services/quotes.service';
+import { sendQuoteToWebhook } from '@/services/webhook.service';
+import type { SendQuoteWebhookParams } from '@/services/webhook.service';
 
 export const quotesKeys = {
   all: ['quotes'] as const,
@@ -82,5 +84,36 @@ export function useUpdateQuoteStatus() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: quotesKeys.list() });
     },
+  });
+}
+
+export function useUpdateQuoteFollowup() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, value }: { id: string; value: boolean }) =>
+      quotesService.updateQuoteFollowup(id, value),
+    onMutate: async ({ id, value }) => {
+      await queryClient.cancelQueries({ queryKey: quotesKeys.list() });
+      const previousQuotes = queryClient.getQueryData<Quote[]>(quotesKeys.list());
+      queryClient.setQueryData<Quote[]>(quotesKeys.list(), (old) =>
+        old?.map(q => q.id === id ? { ...q, seguimiento_automatico: value } : q) ?? []
+      );
+      return { previousQuotes };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousQuotes) {
+        queryClient.setQueryData(quotesKeys.list(), context.previousQuotes);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: quotesKeys.list() });
+    },
+  });
+}
+
+export function useSendQuoteWebhook() {
+  return useMutation({
+    mutationFn: (params: SendQuoteWebhookParams) => sendQuoteToWebhook(params),
   });
 }

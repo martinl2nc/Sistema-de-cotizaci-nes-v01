@@ -109,7 +109,8 @@ export interface Quote {
   total_final: number;
   fecha_creacion: string;
   ultima_actualizacion: string;
-  
+  seguimiento_automatico: boolean;
+
   // Relaciones
   clientes?: Client;
   perfiles_usuario?: { id: string, nombre: string, email?: string };
@@ -195,8 +196,17 @@ export const quotesService = {
       .eq('id', id)
       .select()
       .single();
-      
+
     if (error) throw error;
     return data;
-  }
+  },
+
+  async updateQuoteFollowup(id: string, value: boolean): Promise<void> {
+    const { error } = await supabase
+      .from('cotizaciones')
+      .update({ seguimiento_automatico: value })
+      .eq('id', id);
+
+    if (error) throw error;
+  },
 };

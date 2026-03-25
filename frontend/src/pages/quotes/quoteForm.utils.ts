@@ -80,3 +80,24 @@ export const getClientDisplayName = (client: Client): string => {
 };
 
 export const formatCurrency = (value: number): string => `S/ ${value.toFixed(2)}`;
+
+/** Converts a Blob to a Base64-encoded string */
+export const blobToBase64 = async (blob: Blob): Promise<string> => {
+  const arrayBuffer = await blob.arrayBuffer();
+  const bytes = new Uint8Array(arrayBuffer);
+  let binary = '';
+  bytes.forEach(byte => { binary += String.fromCharCode(byte); });
+  return btoa(binary);
+};
+
+/** Triggers a browser download for a Blob */
+export const downloadBlob = (blob: Blob, filename: string): void => {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
