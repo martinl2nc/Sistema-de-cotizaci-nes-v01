@@ -55,7 +55,7 @@ export default function ClientsPage() {
   };
 
   return (
-    <div className="max-w-7xl w-full mx-auto flex flex-col h-full space-y-6">
+    <div className="max-w-7xl w-full mx-auto flex flex-col md:h-full space-y-6">
       {/* Page Header & Tabs */}
       <div className="space-y-4">
         <h1 className="text-2xl font-medium tracking-tight text-[#E2E8F0]">
@@ -67,7 +67,7 @@ export default function ClientsPage() {
       </div>
 
       {/* Panel */}
-      <div className="bg-[#181B21] border border-[#334155] rounded-xl shadow-sm flex flex-col w-full overflow-hidden flex-1">
+      <div className="bg-[#181B21] border border-[#334155] rounded-xl shadow-sm flex flex-col w-full md:overflow-hidden md:flex-1">
         {/* Panel Header */}
         <div className="p-6 border-b border-[#334155]">
           {/* Segmented Control */}
@@ -126,8 +126,8 @@ export default function ClientsPage() {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto flex-1">
+        {/* Table / Cards */}
+        <div className="md:flex-1 md:overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center p-12 text-[#94A3B8] text-sm">
               Cargando clientes...
@@ -141,53 +141,28 @@ export default function ClientsPage() {
               {searchTerm ? 'No se encontraron clientes con esa búsqueda.' : 'No hay clientes registrados.'}
             </div>
           ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr>
-                  <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155]">RUC / DNI</th>
-                  <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155]">Empresa / Razón Social</th>
-                  <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155]">Contacto Principal</th>
-                  <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155]">Email & Teléfono</th>
-                  <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155] text-center">Estado</th>
-                  <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155] text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#334155]/60 bg-[#181B21]">
+            <>
+              {/* Mobile cards */}
+              <div className="md:hidden space-y-3 p-4">
                 {filteredClients.map((client) => (
-                  <tr key={client.id} className="hover:bg-[#334155]/20 transition-colors group">
-                    <td className={`px-6 py-4 whitespace-nowrap text-xs ${client.activo ? 'text-[#94A3B8]' : 'text-[#94A3B8]/50'}`}>
-                      {client.numero_documento || '—'}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${client.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'}`}>
-                      {client.razon_social || `${client.nombres_contacto} ${client.apellidos_contacto}`}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${client.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'}`}>
-                      {client.nombres_contacto} {client.apellidos_contacto}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-col gap-0.5">
-                        <span className={`text-sm ${client.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'}`}>{client.email}</span>
-                        {client.telefono && (
-                          <span className={`text-xs ${client.activo ? 'text-[#94A3B8]' : 'text-[#94A3B8]/50'}`}>{client.telefono}</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          checked={client.activo}
-                          onChange={() => handleToggle(client)}
-                        />
-                        <div className="w-9 h-5 bg-[#334155] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#3B82F6]"></div>
-                      </label>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                      <div className="flex items-center justify-end gap-2">
+                  <div key={client.id} className="bg-[#0F1115] border border-[#334155] rounded-lg p-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className={`text-sm font-medium leading-snug ${client.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'}`}>
+                        {client.razon_social || `${client.nombres_contacto} ${client.apellidos_contacto}`}
+                      </p>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="sr-only peer"
+                            checked={client.activo}
+                            onChange={() => handleToggle(client)}
+                          />
+                          <div className="w-9 h-5 bg-[#334155] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#3B82F6]"></div>
+                        </label>
                         <button
                           onClick={() => handleEdit(client)}
-                          className="flex items-center gap-1.5 border border-[#334155] hover:bg-[#334155]/50 transition-colors font-medium text-[#E2E8F0] rounded-md px-2.5 py-1.5"
+                          className="flex items-center gap-1 border border-[#334155] hover:bg-[#334155]/50 transition-colors text-[#E2E8F0] rounded-md px-2 py-1"
                           title="Editar"
                         >
                           <iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
@@ -198,14 +173,97 @@ export default function ClientsPage() {
                           className="flex items-center justify-center border border-red-500/30 text-[#E2E8F0] hover:text-[#EF4444] hover:bg-[#EF4444]/10 p-1.5 rounded-md transition-colors"
                           title="Eliminar"
                         >
-                          <iconify-icon icon="solar:trash-bin-trash-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                          <iconify-icon icon="solar:trash-bin-trash-linear" stroke-width="1.5" class="text-base"></iconify-icon>
                         </button>
                       </div>
-                    </td>
-                  </tr>
+                    </div>
+                    {client.numero_documento && (
+                      <p className={`text-xs ${client.activo ? 'text-[#94A3B8]' : 'text-[#94A3B8]/50'}`}>
+                        Doc: {client.numero_documento}
+                      </p>
+                    )}
+                    <p className={`text-xs ${client.activo ? 'text-[#94A3B8]' : 'text-[#94A3B8]/50'}`}>
+                      {client.nombres_contacto} {client.apellidos_contacto}
+                    </p>
+                    <div className="flex flex-col gap-0.5">
+                      <span className={`text-xs ${client.activo ? 'text-[#94A3B8]' : 'text-[#94A3B8]/50'}`}>{client.email}</span>
+                      {client.telefono && (
+                        <span className={`text-xs ${client.activo ? 'text-[#94A3B8]' : 'text-[#94A3B8]/50'}`}>{client.telefono}</span>
+                      )}
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+
+              {/* Desktop table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr>
+                      <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155]">RUC / DNI</th>
+                      <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155]">Empresa / Razón Social</th>
+                      <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155]">Contacto Principal</th>
+                      <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155]">Email & Teléfono</th>
+                      <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155] text-center">Estado</th>
+                      <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155] text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#334155]/60 bg-[#181B21]">
+                    {filteredClients.map((client) => (
+                      <tr key={client.id} className="hover:bg-[#334155]/20 transition-colors group">
+                        <td className={`px-6 py-4 whitespace-nowrap text-xs ${client.activo ? 'text-[#94A3B8]' : 'text-[#94A3B8]/50'}`}>
+                          {client.numero_documento || '—'}
+                        </td>
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${client.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'}`}>
+                          {client.razon_social || `${client.nombres_contacto} ${client.apellidos_contacto}`}
+                        </td>
+                        <td className={`px-6 py-4 whitespace-nowrap text-sm ${client.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'}`}>
+                          {client.nombres_contacto} {client.apellidos_contacto}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex flex-col gap-0.5">
+                            <span className={`text-sm ${client.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'}`}>{client.email}</span>
+                            {client.telefono && (
+                              <span className={`text-xs ${client.activo ? 'text-[#94A3B8]' : 'text-[#94A3B8]/50'}`}>{client.telefono}</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="sr-only peer"
+                              checked={client.activo}
+                              onChange={() => handleToggle(client)}
+                            />
+                            <div className="w-9 h-5 bg-[#334155] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#3B82F6]"></div>
+                          </label>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => handleEdit(client)}
+                              className="flex items-center gap-1.5 border border-[#334155] hover:bg-[#334155]/50 transition-colors font-medium text-[#E2E8F0] rounded-md px-2.5 py-1.5"
+                              title="Editar"
+                            >
+                              <iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+                              <span className="text-xs">Editar</span>
+                            </button>
+                            <button
+                              onClick={() => handleDelete(client)}
+                              className="flex items-center justify-center border border-red-500/30 text-[#E2E8F0] hover:text-[#EF4444] hover:bg-[#EF4444]/10 p-1.5 rounded-md transition-colors"
+                              title="Eliminar"
+                            >
+                              <iconify-icon icon="solar:trash-bin-trash-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
           </>

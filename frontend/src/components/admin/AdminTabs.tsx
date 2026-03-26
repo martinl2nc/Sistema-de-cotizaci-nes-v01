@@ -1,19 +1,23 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom'
 
 const tabs = [
-  { id: 'productos', label: 'Productos y Categorías', path: '/admin/productos' },
+  {
+    id: 'productos',
+    label: 'Productos y Categorías',
+    path: '/admin/productos'
+  },
   { id: 'empresa', label: 'Configuración de Empresa', path: '/admin/empresa' },
-  { id: 'clientes', label: 'Clientes y Vendedores', path: '/admin/clientes' },
-];
+  { id: 'clientes', label: 'Clientes y Vendedores', path: '/admin/clientes' }
+]
 
 export default function AdminTabs() {
-  const location = useLocation();
+  const location = useLocation()
 
   return (
-    <div className="border-b border-[#334155]">
-      <nav className="-mb-px flex space-x-8">
+    <div className="border-b border-[#334155] overflow-x-auto">
+      <nav className="flex space-x-8 min-w-max">
         {tabs.map((tab) => {
-          const isActive = location.pathname === tab.path;
+          const isActive = location.pathname === tab.path
           return (
             <Link
               key={tab.id}
@@ -26,9 +30,9 @@ export default function AdminTabs() {
             >
               {tab.label}
             </Link>
-          );
+          )
         })}
       </nav>
     </div>
-  );
+  )
 }

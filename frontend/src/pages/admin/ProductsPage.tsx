@@ -69,7 +69,7 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="max-w-7xl w-full mx-auto flex flex-col h-full space-y-6">
+    <div className="max-w-7xl w-full mx-auto flex flex-col md:h-full space-y-6">
       {/* Page Header & Tabs */}
       <div className="space-y-4">
         <h1 className="text-2xl font-medium tracking-tight text-[#E2E8F0]">
@@ -79,7 +79,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Panel */}
-      <div className="bg-[#181B21] border border-[#334155] rounded-xl shadow-sm flex flex-col w-full overflow-hidden flex-1">
+      <div className="bg-[#181B21] border border-[#334155] rounded-xl shadow-sm flex flex-col w-full md:overflow-hidden md:flex-1">
         {/* Toolbar */}
         <div className="p-4 border-b border-[#334155] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="relative w-full sm:max-w-md">
@@ -113,8 +113,8 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto flex-1">
+        {/* Table / Cards */}
+        <div className="md:flex-1 md:overflow-y-auto">
           {isLoading ? (
             <div className="p-8 space-y-4 animate-pulse">
               {[...Array(4)].map((_, i) => (
@@ -132,69 +132,120 @@ export default function ProductsPage() {
               {searchTerm ? 'No se encontraron productos.' : 'No hay productos registrados.'}
             </div>
           ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-[#0F1115] border-b border-[#334155]">
-                  <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider">SKU</th>
-                  <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Nombre</th>
-                  <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Categoría</th>
-                  <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider text-right">Precio Base</th>
-                  <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider text-center">Estado</th>
-                  <th className="py-3 px-6 w-[60px]"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#334155]">
-                {filteredProducts.map((product, index) => (
-                  <tr
-                    key={product.id}
-                    className={`hover:bg-[#334155]/30 transition-colors group ${
-                      index % 2 === 0 ? 'bg-[#334155]/20' : ''
-                    }`}
-                  >
-                    <td className={`py-4 px-6 text-sm font-medium ${product.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'}`}>
-                      {product.sku || '—'}
-                    </td>
-                    <td className={`py-4 px-6 text-sm ${product.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'}`}>
-                      {product.nombre}
-                    </td>
-                    <td className="py-4 px-6">
-                      {product.categorias?.nombre ? (
-                        <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-[#334155] ${
-                          product.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'
-                        }`}>
+            <>
+              {/* Mobile cards */}
+              <div className="md:hidden space-y-3 p-4">
+                {filteredProducts.map((product) => (
+                  <div key={product.id} className="bg-[#0F1115] border border-[#334155] rounded-lg p-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className={`text-sm font-medium leading-snug ${product.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'}`}>
+                        {product.nombre}
+                      </p>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="sr-only peer"
+                            checked={product.activo}
+                            onChange={() => handleToggle(product)}
+                          />
+                          <div className="w-9 h-5 bg-[#334155] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#3B82F6]"></div>
+                        </label>
+                        <button
+                          onClick={() => handleEdit(product)}
+                          className="flex items-center gap-1 border border-[#334155] hover:bg-[#334155]/50 transition-colors text-[#E2E8F0] rounded-md px-2 py-1"
+                        >
+                          <iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+                          <span className="text-xs">Editar</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {product.sku && (
+                        <span className={`text-xs ${product.activo ? 'text-[#94A3B8]' : 'text-[#94A3B8]/50'}`}>
+                          SKU: {product.sku}
+                        </span>
+                      )}
+                      {product.categorias?.nombre && (
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#334155] ${product.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'}`}>
                           {product.categorias.nombre}
                         </span>
-                      ) : (
-                        <span className="text-[#94A3B8] text-xs">—</span>
                       )}
-                    </td>
-                    <td className={`py-4 px-6 text-sm text-right ${product.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'}`}>
+                    </div>
+                    <p className={`text-sm font-semibold text-right ${product.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'}`}>
                       S/ {formatPrice(product.precio_base)}
-                    </td>
-                    <td className="py-4 px-6 text-center">
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          checked={product.activo}
-                          onChange={() => handleToggle(product)}
-                        />
-                        <div className="w-9 h-5 bg-[#334155] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#3B82F6]"></div>
-                      </label>
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <button
-                        onClick={() => handleEdit(product)}
-                        className="flex items-center gap-1.5 border border-[#334155] hover:bg-[#334155]/50 transition-colors font-medium text-[#E2E8F0] rounded-md px-2.5 py-1.5"
-                      >
-                        <iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
-                        <span className="text-xs">Editar</span>
-                      </button>
-                    </td>
-                  </tr>
+                    </p>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+
+              {/* Desktop table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-[#0F1115] border-b border-[#334155]">
+                      <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider">SKU</th>
+                      <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Nombre</th>
+                      <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider">Categoría</th>
+                      <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider text-right">Precio Base</th>
+                      <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider text-center">Estado</th>
+                      <th className="py-3 px-6 w-[60px]"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#334155]">
+                    {filteredProducts.map((product, index) => (
+                      <tr
+                        key={product.id}
+                        className={`hover:bg-[#334155]/30 transition-colors group ${
+                          index % 2 === 0 ? 'bg-[#334155]/20' : ''
+                        }`}
+                      >
+                        <td className={`py-4 px-6 text-sm font-medium ${product.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'}`}>
+                          {product.sku || '—'}
+                        </td>
+                        <td className={`py-4 px-6 text-sm ${product.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'}`}>
+                          {product.nombre}
+                        </td>
+                        <td className="py-4 px-6">
+                          {product.categorias?.nombre ? (
+                            <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-[#334155] ${
+                              product.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'
+                            }`}>
+                              {product.categorias.nombre}
+                            </span>
+                          ) : (
+                            <span className="text-[#94A3B8] text-xs">—</span>
+                          )}
+                        </td>
+                        <td className={`py-4 px-6 text-sm text-right ${product.activo ? 'text-[#E2E8F0]' : 'text-[#94A3B8]'}`}>
+                          S/ {formatPrice(product.precio_base)}
+                        </td>
+                        <td className="py-4 px-6 text-center">
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="sr-only peer"
+                              checked={product.activo}
+                              onChange={() => handleToggle(product)}
+                            />
+                            <div className="w-9 h-5 bg-[#334155] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#3B82F6]"></div>
+                          </label>
+                        </td>
+                        <td className="py-4 px-6 text-right">
+                          <button
+                            onClick={() => handleEdit(product)}
+                            className="flex items-center gap-1.5 border border-[#334155] hover:bg-[#334155]/50 transition-colors font-medium text-[#E2E8F0] rounded-md px-2.5 py-1.5"
+                          >
+                            <iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+                            <span className="text-xs">Editar</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>

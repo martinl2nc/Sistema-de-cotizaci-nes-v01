@@ -42,6 +42,9 @@ export default function QuoteForm() {
   const [error, setError] = useState<string | null>(null);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isSendingQuote, setIsSendingQuote] = useState(false);
+  const [quoteSentMessage, setQuoteSentMessage] = useState<string | null>(null);
+  const [showMobileTotals, setShowMobileTotals] = useState(false);
 
   const {
     quoteData,
@@ -98,20 +101,17 @@ export default function QuoteForm() {
 
   const handleGeneratePDF = async () => {
     const validationError = validateQuoteForm(quoteData, lineItems);
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
+    if (validationError) { setError(validationError); return; }
 
     setIsGeneratingPDF(true);
     setError(null);
+    setQuoteSentMessage(null);
     webhookMutation.reset();
 
     try {
       const client = allClients.find(c => c.id === quoteData.cliente_id) || null;
       const seller = sellers.find(s => s.id === quoteData.vendedor_id);
 
-      // 1. Guardar primero en BD para obtener el correlativo real
       const finalQuoteData: QuoteFormData = {
         ...quoteData,
         estado: 'PDF Generado',
@@ -121,13 +121,58 @@ export default function QuoteForm() {
         total_final: totals.total_final,
         lineas: lineItems
       };
-      
+
       const savedQuote = await saveQuoteMutation.mutateAsync(finalQuoteData);
-      
-      // En este punto, la BD ya nos devolvió el ID real
       const quoteIdStr = `COT-${savedQuote.numero_correlativo}`;
 
-      // 2. Renderizar PDF con el número real
+      const doc = (
+        <QuotePDFDocument
+          quoteData={{ ...quoteData, id: savedQuote.id }}
+          totals={totals}
+          lineItems={lineItems}
+          client={client}
+          sellerName={seller?.nombre || ''}
+          quoteIdStr={quoteIdStr}
+          companyConfig={companyConfig}
+          products={products}
+        />
+      );
+      const blob = await pdf(doc).toBlob();
+      downloadBlob(blob, `${quoteIdStr}.pdf`);
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.message || 'Error al generar el PDF.');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  const handleSendQuote = async () => {
+    const validationError = validateQuoteForm(quoteData, lineItems);
+    if (validationError) { setError(validationError); return; }
+
+    setIsSendingQuote(true);
+    setError(null);
+    setQuoteSentMessage(null);
+    webhookMutation.reset();
+
+    try {
+      const client = allClients.find(c => c.id === quoteData.cliente_id) || null;
+      const seller = sellers.find(s => s.id === quoteData.vendedor_id);
+
+      const finalQuoteData: QuoteFormData = {
+        ...quoteData,
+        estado: 'Enviada',
+        vendedor_id: quoteData.vendedor_id || null,
+        subtotal: totals.subtotal,
+        igv_monto: totals.igv_monto,
+        total_final: totals.total_final,
+        lineas: lineItems
+      };
+
+      const savedQuote = await saveQuoteMutation.mutateAsync(finalQuoteData);
+      const quoteIdStr = `COT-${savedQuote.numero_correlativo}`;
+
       const doc = (
         <QuotePDFDocument
           quoteData={{ ...quoteData, id: savedQuote.id }}
@@ -142,10 +187,6 @@ export default function QuoteForm() {
       );
       const blob = await pdf(doc).toBlob();
 
-      // 3. Descarga local
-      downloadBlob(blob, `${quoteIdStr}.pdf`);
-
-      // 4. Enviar al webhook de n8n (si está configurado y el cliente tiene email)
       if (isWebhookConfigured() && client?.email) {
         const pdfBase64 = await blobToBase64(blob);
         const payload = buildWebhookPayload({
@@ -157,16 +198,21 @@ export default function QuoteForm() {
           totalFinal: totals.total_final,
           fechaEmision: quoteData.fecha_emision,
         });
-        if (payload) await webhookMutation.mutateAsync(payload);
+        if (payload) {
+          await webhookMutation.mutateAsync(payload);
+          setQuoteSentMessage(`Cotización ${quoteIdStr} enviada al cliente`);
+        } else {
+          setQuoteSentMessage(`Cotización ${quoteIdStr} guardada como Enviada`);
+        }
+      } else {
+        setQuoteSentMessage(`Cotización ${quoteIdStr} guardada como Enviada`);
       }
-
-      // 5. Navegar a la lista
-      navigate('/cotizaciones');
+      setTimeout(() => setQuoteSentMessage(null), 5000);
     } catch (err: any) {
       console.error(err);
-      setError(err?.message || 'Error al guardar la cotización o generar el PDF.');
+      setError(err?.message || 'Error al enviar la cotización.');
     } finally {
-      setIsGeneratingPDF(false);
+      setIsSendingQuote(false);
     }
   };
 
@@ -182,7 +228,7 @@ export default function QuoteForm() {
     });
   };
 
-  const isSaving = saveQuoteMutation.isPending || deleteQuoteMutation.isPending || isGeneratingPDF;
+  const isSaving = saveQuoteMutation.isPending || deleteQuoteMutation.isPending || isGeneratingPDF || isSendingQuote;
 
   // ─── Loading / Error states ─────────────────────────────────
   if (loading) {
@@ -308,7 +354,87 @@ export default function QuoteForm() {
 
         {/* Lines */}
         <div className="bg-[#181B21] border border-[#334155] rounded-xl overflow-hidden shadow-sm flex flex-col">
-          <div className="overflow-x-auto">
+
+          {/* ── Mobile cards ── */}
+          <div className="md:hidden divide-y divide-[#334155]">
+            {lineItems.map((item, index) => (
+              <div key={index} className="p-4 space-y-3">
+                {/* Row 1: catalog selector + delete */}
+                <div className="flex items-center gap-2">
+                  <select
+                    value={item.producto_id || ''}
+                    onChange={(e) => updateLineItem(index, 'producto_id', e.target.value || null)}
+                    className="flex-1 bg-[#0F1115] border border-[#334155] rounded text-sm text-[#E2E8F0] px-2 py-2 focus:border-[#3B82F6] focus:outline-none"
+                  >
+                    <option value="">Personalizado...</option>
+                    {products.map(p => (
+                      <option key={p.id} value={p.id}>{p.nombre}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => removeLineItem(index)}
+                    className="shrink-0 text-[#EF4444]/80 hover:text-[#EF4444] p-2 rounded hover:bg-[#EF4444]/10 transition-colors"
+                  >
+                    <iconify-icon icon="solar:trash-bin-trash-linear" class="text-lg block"></iconify-icon>
+                  </button>
+                </div>
+
+                {/* Row 2: description full width */}
+                <input
+                  type="text"
+                  value={item.nombre_producto_historico}
+                  onChange={(e) => updateLineItem(index, 'nombre_producto_historico', e.target.value)}
+                  placeholder="Descripción del producto..."
+                  className="w-full bg-[#0F1115] border border-[#334155] rounded px-2 py-2 text-sm text-[#E2E8F0] focus:border-[#3B82F6] focus:outline-none placeholder-[#334155]"
+                />
+
+                {/* Row 3: qty / price / discount + subtotal */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-[#94A3B8] uppercase tracking-wide">Cant.</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={item.cantidad}
+                      onChange={(e) => updateLineItem(index, 'cantidad', parseFloat(e.target.value) || 0)}
+                      className="w-full bg-[#0F1115] border border-[#334155] rounded px-2 py-2 text-sm text-[#E2E8F0] text-center focus:border-[#3B82F6] focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-[#94A3B8] uppercase tracking-wide">Precio U.</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={item.precio_unitario}
+                      onChange={(e) => updateLineItem(index, 'precio_unitario', parseFloat(e.target.value) || 0)}
+                      className="w-full bg-[#0F1115] border border-[#334155] rounded px-2 py-2 text-sm text-[#E2E8F0] text-right focus:border-[#3B82F6] focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-[#94A3B8] uppercase tracking-wide">Desc. (S/)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={item.descuento_linea_monto}
+                      onChange={(e) => updateLineItem(index, 'descuento_linea_monto', parseFloat(e.target.value) || 0)}
+                      className="w-full bg-[#0F1115] border border-[#334155] rounded px-2 py-2 text-sm text-[#E2E8F0] text-right focus:border-[#3B82F6] focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Subtotal */}
+                <div className="flex justify-end">
+                  <span className="text-xs text-[#94A3B8]">Sub:&nbsp;</span>
+                  <span className="text-sm font-semibold text-[#E2E8F0]">{formatCurrency(item.subtotal_linea)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* ── Desktop table (unchanged) ── */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
                 <tr className="bg-[#0F1115] border-b border-[#334155]">
@@ -387,89 +513,206 @@ export default function QuoteForm() {
               </tbody>
             </table>
           </div>
+
           <div className="p-4 border-t border-[#334155] bg-[#181B21]">
             <button onClick={addLineItem} className="flex items-center gap-2 text-sm font-medium text-[#3B82F6] hover:text-[#60A5FA] hover:bg-[#3B82F6]/10 px-3 py-1.5 rounded transition-colors focus:outline-none">
               <iconify-icon icon="solar:add-circle-linear" class="text-lg"></iconify-icon> Añadir Fila Opcional
             </button>
           </div>
         </div>
-        <div className="h-28"></div>
+        <div className="h-4 md:h-28"></div>
       </main>
 
       {/* Footer Totals & Actions */}
-      <footer className="shrink-0 bg-[#181B21] border-t border-[#334155] p-6 shadow-xl z-20">
-        <div className="flex flex-col items-end w-full">
-          <div className="w-full sm:w-80 space-y-3 mb-6">
-            <div className="flex justify-between items-center text-sm text-[#94A3B8]">
-              <span>Subtotal</span>
-              <span className="font-medium text-[#E2E8F0]">{formatCurrency(totals.subtotal)}</span>
+      <footer className="shrink-0 bg-[#181B21] border-t border-[#334155] shadow-xl z-20">
+
+        {/* ── Mobile footer ── */}
+        <div className="md:hidden px-4 py-3 space-y-2">
+          {/* Collapsible totals detail */}
+          {showMobileTotals && (
+            <div className="space-y-1.5 pb-2 border-b border-[#334155]">
+              <div className="flex justify-between text-xs text-[#94A3B8]">
+                <span>Subtotal</span>
+                <span className="text-[#E2E8F0]">{formatCurrency(totals.subtotal)}</span>
+              </div>
+              {quoteData.descuento_global_monto > 0 && (
+                <div className="flex justify-between text-xs text-[#94A3B8]">
+                  <span>Descuento Global</span>
+                  <span className="text-[#EF4444]">- {formatCurrency(quoteData.descuento_global_monto)}</span>
+                </div>
+              )}
+              {quoteData.aplica_igv && (
+                <div className="flex justify-between text-xs text-[#94A3B8]">
+                  <span>IGV (18%)</span>
+                  <span className="text-[#E2E8F0]">{formatCurrency(totals.igv_monto)}</span>
+                </div>
+              )}
             </div>
-            {quoteData.descuento_global_monto > 0 && (
-              <div className="flex justify-between items-center text-sm text-[#94A3B8]">
-                <span>Descuento Global</span>
-                <span className="font-medium text-[#EF4444]">- {formatCurrency(quoteData.descuento_global_monto)}</span>
-              </div>
-            )}
-            {quoteData.aplica_igv && (
-              <div className="flex justify-between items-center text-sm text-[#94A3B8]">
-                <span>IGV (18%)</span>
-                <span className="font-medium text-[#E2E8F0]">{formatCurrency(totals.igv_monto)}</span>
-              </div>
-            )}
-            <div className="h-px bg-[#334155] w-full my-3"></div>
-            <div className="flex justify-between items-end">
-              <span className="text-sm font-medium text-[#94A3B8] pb-1.5">Total Final</span>
-              <span className="text-3xl font-medium tracking-tight text-[#E2E8F0]">{formatCurrency(totals.total_final)}</span>
+          )}
+
+          {/* Total row + toggle */}
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setShowMobileTotals(v => !v)}
+              className="flex items-center gap-1 text-xs text-[#94A3B8] hover:text-[#E2E8F0] transition-colors"
+            >
+              <iconify-icon icon={showMobileTotals ? 'solar:alt-arrow-down-linear' : 'solar:alt-arrow-up-linear'} class="text-sm"></iconify-icon>
+              {showMobileTotals ? 'ocultar' : 'detalles'}
+            </button>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-xs text-[#94A3B8]">Total</span>
+              <span className="text-lg font-semibold text-[#E2E8F0]">{formatCurrency(totals.total_final)}</span>
             </div>
           </div>
 
-          <div className="flex w-full sm:w-auto flex-col sm:flex-row gap-3 justify-end items-center">
-            {/* Send status indicator */}
-            {webhookMutation.isPending && (
-              <span className="text-xs text-[#94A3B8] flex items-center gap-1.5 animate-pulse">
-                <iconify-icon icon="solar:spinner-linear" class="animate-spin text-[#3B82F6]"></iconify-icon>
-                Enviando por correo...
-              </span>
-            )}
-            {webhookMutation.isSuccess && (
-              <span className="text-xs text-[#10B981] flex items-center gap-1.5">
-                <iconify-icon icon="solar:check-circle-linear"></iconify-icon>
-                Correo enviado al cliente
-              </span>
-            )}
-            {webhookMutation.isError && (
-              <span className="text-xs text-[#F59E0B] flex items-center gap-1.5">
-                <iconify-icon icon="solar:danger-triangle-linear"></iconify-icon>
-                PDF descargado, fallo el envío por correo
-              </span>
-            )}
+          {/* Send status */}
+          {(quoteSentMessage || webhookMutation.isPending || webhookMutation.isError) && (
+            <div className="pt-1">
+              {webhookMutation.isPending && (
+                <span className="text-[10px] text-[#94A3B8] flex items-center gap-1 animate-pulse">
+                  <iconify-icon icon="solar:spinner-linear" class="animate-spin text-[#3B82F6]"></iconify-icon>
+                  Enviando cotización...
+                </span>
+              )}
+              {quoteSentMessage && !webhookMutation.isPending && !webhookMutation.isError && (
+                <span className="text-[10px] text-[#10B981] flex items-center gap-1">
+                  <iconify-icon icon="solar:check-circle-linear"></iconify-icon>
+                  {quoteSentMessage}
+                </span>
+              )}
+              {webhookMutation.isError && (
+                <span className="text-[10px] text-[#F59E0B] flex items-center gap-1">
+                  <iconify-icon icon="solar:danger-triangle-linear"></iconify-icon>
+                  Error al enviar — cotización guardada como Enviada
+                </span>
+              )}
+            </div>
+          )}
 
+          {/* Actions — row 1: delete + save */}
+          <div className="flex items-center gap-2 pt-1">
             {isEditing && (
-              <button 
+              <button
                 onClick={handleDelete}
                 disabled={isSaving}
-                className="px-5 py-2.5 rounded-lg border border-red-500/50 text-red-500 hover:bg-red-500/10 text-sm font-medium disabled:opacity-50 transition-colors mr-auto sm:mr-0 flex items-center gap-2"
+                className="p-2 rounded-lg border border-red-500/50 text-red-500 hover:bg-red-500/10 disabled:opacity-50 transition-colors shrink-0"
+                title="Eliminar Cotización"
               >
-                <iconify-icon icon="solar:trash-bin-trash-linear" class="text-lg"></iconify-icon> Eliminar Cotización
+                <iconify-icon icon="solar:trash-bin-trash-linear" class="text-lg"></iconify-icon>
               </button>
             )}
             <button
               onClick={() => handleSave('Borrador')}
               disabled={isSaving}
-              className="px-5 py-2.5 rounded-lg border border-[#334155] bg-[#181B21] text-[#E2E8F0] hover:bg-[#334155]/40 text-sm font-medium disabled:opacity-50 transition-colors flex items-center gap-2"
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-[#334155] bg-[#181B21] text-[#E2E8F0] hover:bg-[#334155]/40 text-xs font-medium disabled:opacity-50 transition-colors"
             >
-              <iconify-icon icon="solar:diskette-linear" class="text-lg"></iconify-icon> Guardar Borrador
+              <iconify-icon icon="solar:diskette-linear" class="text-base"></iconify-icon>
+              Guardar
             </button>
+          </div>
+
+          {/* Actions — row 2: PDF + send */}
+          <div className="flex items-center gap-2">
             <button
               onClick={handleGeneratePDF}
               disabled={isSaving}
-              className="bg-[#10B981] hover:bg-[#059669] text-white px-6 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="flex-1 flex items-center justify-center gap-1.5 border border-[#334155] text-[#E2E8F0] hover:bg-[#334155]/40 px-3 py-2 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
             >
-              <iconify-icon icon="solar:letter-linear" class="text-lg"></iconify-icon>
-              {isGeneratingPDF ? 'Generando PDF...' : isSaving ? 'Procesando...' : 'Generar y Enviar PDF'}
+              <iconify-icon icon="solar:file-download-linear" class="text-base"></iconify-icon>
+              {isGeneratingPDF ? 'Generando...' : 'Generar PDF'}
+            </button>
+            <button
+              onClick={handleSendQuote}
+              disabled={isSaving}
+              className="flex-1 flex items-center justify-center gap-1.5 bg-[#10B981] hover:bg-[#059669] text-white px-3 py-2 rounded-lg text-xs font-medium shadow-sm transition-colors disabled:opacity-50"
+            >
+              <iconify-icon icon="solar:letter-linear" class="text-base"></iconify-icon>
+              {isSendingQuote ? 'Enviando...' : 'Enviar Cot.'}
             </button>
           </div>
         </div>
+
+        {/* ── Desktop footer (unchanged) ── */}
+        <div className="hidden md:block p-6">
+          <div className="flex flex-col items-end w-full">
+            <div className="w-full sm:w-80 space-y-3 mb-6">
+              <div className="flex justify-between items-center text-sm text-[#94A3B8]">
+                <span>Subtotal</span>
+                <span className="font-medium text-[#E2E8F0]">{formatCurrency(totals.subtotal)}</span>
+              </div>
+              {quoteData.descuento_global_monto > 0 && (
+                <div className="flex justify-between items-center text-sm text-[#94A3B8]">
+                  <span>Descuento Global</span>
+                  <span className="font-medium text-[#EF4444]">- {formatCurrency(quoteData.descuento_global_monto)}</span>
+                </div>
+              )}
+              {quoteData.aplica_igv && (
+                <div className="flex justify-between items-center text-sm text-[#94A3B8]">
+                  <span>IGV (18%)</span>
+                  <span className="font-medium text-[#E2E8F0]">{formatCurrency(totals.igv_monto)}</span>
+                </div>
+              )}
+              <div className="h-px bg-[#334155] w-full my-3"></div>
+              <div className="flex justify-between items-end">
+                <span className="text-sm font-medium text-[#94A3B8] pb-1.5">Total Final</span>
+                <span className="text-3xl font-medium tracking-tight text-[#E2E8F0]">{formatCurrency(totals.total_final)}</span>
+              </div>
+            </div>
+            <div className="flex w-full sm:w-auto flex-col sm:flex-row gap-3 justify-end items-center">
+              {webhookMutation.isPending && (
+                <span className="text-xs text-[#94A3B8] flex items-center gap-1.5 animate-pulse">
+                  <iconify-icon icon="solar:spinner-linear" class="animate-spin text-[#3B82F6]"></iconify-icon>
+                  Enviando cotización...
+                </span>
+              )}
+              {quoteSentMessage && !webhookMutation.isPending && !webhookMutation.isError && (
+                <span className="text-xs text-[#10B981] flex items-center gap-1.5">
+                  <iconify-icon icon="solar:check-circle-linear"></iconify-icon>
+                  {quoteSentMessage}
+                </span>
+              )}
+              {webhookMutation.isError && (
+                <span className="text-xs text-[#F59E0B] flex items-center gap-1.5">
+                  <iconify-icon icon="solar:danger-triangle-linear"></iconify-icon>
+                  Error al enviar — cotización guardada como Enviada
+                </span>
+              )}
+              {isEditing && (
+                <button
+                  onClick={handleDelete}
+                  disabled={isSaving}
+                  className="px-5 py-2.5 rounded-lg border border-red-500/50 text-red-500 hover:bg-red-500/10 text-sm font-medium disabled:opacity-50 transition-colors mr-auto sm:mr-0 flex items-center gap-2"
+                >
+                  <iconify-icon icon="solar:trash-bin-trash-linear" class="text-lg"></iconify-icon> Eliminar Cotización
+                </button>
+              )}
+              <button
+                onClick={() => handleSave('Borrador')}
+                disabled={isSaving}
+                className="px-5 py-2.5 rounded-lg border border-[#334155] bg-[#181B21] text-[#E2E8F0] hover:bg-[#334155]/40 text-sm font-medium disabled:opacity-50 transition-colors flex items-center gap-2"
+              >
+                <iconify-icon icon="solar:diskette-linear" class="text-lg"></iconify-icon> Guardar Borrador
+              </button>
+              <button
+                onClick={handleGeneratePDF}
+                disabled={isSaving}
+                className="px-5 py-2.5 rounded-lg border border-[#334155] bg-[#181B21] text-[#E2E8F0] hover:bg-[#334155]/40 text-sm font-medium disabled:opacity-50 transition-colors flex items-center gap-2"
+              >
+                <iconify-icon icon="solar:file-download-linear" class="text-lg"></iconify-icon>
+                {isGeneratingPDF ? 'Generando PDF...' : 'Generar PDF'}
+              </button>
+              <button
+                onClick={handleSendQuote}
+                disabled={isSaving}
+                className="bg-[#10B981] hover:bg-[#059669] text-white px-6 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                <iconify-icon icon="solar:letter-linear" class="text-lg"></iconify-icon>
+                {isSendingQuote ? 'Enviando...' : 'Enviar Cotización'}
+              </button>
+            </div>
+          </div>
+        </div>
+
       </footer>
 
       {/* Modal para Crear Cliente desde Cotización (Reutilizado) */}

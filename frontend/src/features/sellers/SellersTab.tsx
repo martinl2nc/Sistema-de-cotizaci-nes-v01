@@ -72,7 +72,7 @@ export default function SellersTab() {
         </div>
       </div>
 
-      <div className="overflow-x-auto flex-1">
+      <div className="md:flex-1 md:overflow-y-auto">
         {isLoading ? (
           <div className="flex items-center justify-center p-12 text-[#94A3B8] text-sm">
             Cargando vendedores...
@@ -86,51 +86,34 @@ export default function SellersTab() {
             {searchTerm ? 'No se encontraron vendedores con esa búsqueda.' : 'No hay vendedores registrados.'}
           </div>
         ) : (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr>
-                <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155]">Nombre Completo</th>
-                <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155]">Correo Electrónico</th>
-                <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155]">Estado</th>
-                <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155] text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#334155]/60 bg-[#181B21]">
+          <>
+            {/* Mobile cards */}
+            <div className="md:hidden space-y-3 p-4">
               {filteredSellers.map((seller) => (
-                <tr key={seller.id} className="hover:bg-[#334155]/20 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#E2E8F0]">
-                    {seller.nombre}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[#94A3B8]">
-                    {seller.email}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => handleToggleActive(seller)}
-                      disabled={toggleActiveMutation.isPending}
-                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-2 focus:ring-offset-[#181B21] transition-colors ${
-                        seller.activo ? 'bg-[#3B82F6]' : 'bg-[#334155]'
-                      }`}
-                      role="switch"
-                      aria-checked={seller.activo}
-                    >
-                      <span className="sr-only">Cambiar estado</span>
-                      <span
-                        aria-hidden="true"
-                        className={`pointer-events-none absolute left-0 inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition-transform duration-200 ease-in-out ${
-                          seller.activo ? 'translate-x-4' : 'translate-x-0'
+                <div key={seller.id} className="bg-[#0F1115] border border-[#334155] rounded-lg p-4 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium text-[#E2E8F0]">{seller.nombre}</p>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => handleToggleActive(seller)}
+                        disabled={toggleActiveMutation.isPending}
+                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none transition-colors disabled:opacity-50 ${
+                          seller.activo ? 'bg-[#3B82F6]' : 'bg-[#334155]'
                         }`}
-                      />
-                    </button>
-                    <span className={`ml-3 text-xs font-medium ${seller.activo ? 'text-[#10B981]' : 'text-[#94A3B8]'}`}>
-                      {seller.activo ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                    <div className="flex items-center justify-end gap-2">
+                        role="switch"
+                        aria-checked={seller.activo}
+                      >
+                        <span className="sr-only">Cambiar estado</span>
+                        <span
+                          aria-hidden="true"
+                          className={`pointer-events-none absolute left-0 inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition-transform duration-200 ease-in-out ${
+                            seller.activo ? 'translate-x-4' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
                       <button
                         onClick={() => handleEdit(seller)}
-                        className="flex items-center gap-1.5 border border-[#334155] hover:bg-[#334155]/50 transition-colors font-medium text-[#E2E8F0] rounded-md px-2.5 py-1.5"
+                        className="flex items-center gap-1 border border-[#334155] hover:bg-[#334155]/50 transition-colors text-[#E2E8F0] rounded-md px-2 py-1"
                       >
                         <iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
                         <span className="text-xs">Editar</span>
@@ -140,14 +123,84 @@ export default function SellersTab() {
                         className="flex items-center justify-center border border-red-500/30 text-[#E2E8F0] hover:text-[#EF4444] hover:bg-[#EF4444]/10 p-1.5 rounded-md transition-colors"
                         title="Eliminar"
                       >
-                        <iconify-icon icon="solar:trash-bin-trash-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                        <iconify-icon icon="solar:trash-bin-trash-linear" stroke-width="1.5" class="text-base"></iconify-icon>
                       </button>
                     </div>
-                  </td>
-                </tr>
+                  </div>
+                  <p className="text-xs text-[#94A3B8]">{seller.email}</p>
+                  <span className={`text-xs font-medium ${seller.activo ? 'text-[#10B981]' : 'text-[#94A3B8]'}`}>
+                    {seller.activo ? 'Activo' : 'Inactivo'}
+                  </span>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr>
+                    <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155]">Nombre Completo</th>
+                    <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155]">Correo Electrónico</th>
+                    <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155]">Estado</th>
+                    <th className="py-3 px-6 text-xs font-medium text-[#94A3B8] uppercase tracking-wider bg-[#181B21]/50 border-b border-[#334155] text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#334155]/60 bg-[#181B21]">
+                  {filteredSellers.map((seller) => (
+                    <tr key={seller.id} className="hover:bg-[#334155]/20 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#E2E8F0]">
+                        {seller.nombre}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#94A3B8]">
+                        {seller.email}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => handleToggleActive(seller)}
+                          disabled={toggleActiveMutation.isPending}
+                          className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:ring-offset-2 focus:ring-offset-[#181B21] transition-colors ${
+                            seller.activo ? 'bg-[#3B82F6]' : 'bg-[#334155]'
+                          }`}
+                          role="switch"
+                          aria-checked={seller.activo}
+                        >
+                          <span className="sr-only">Cambiar estado</span>
+                          <span
+                            aria-hidden="true"
+                            className={`pointer-events-none absolute left-0 inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition-transform duration-200 ease-in-out ${
+                              seller.activo ? 'translate-x-4' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                        <span className={`ml-3 text-xs font-medium ${seller.activo ? 'text-[#10B981]' : 'text-[#94A3B8]'}`}>
+                          {seller.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleEdit(seller)}
+                            className="flex items-center gap-1.5 border border-[#334155] hover:bg-[#334155]/50 transition-colors font-medium text-[#E2E8F0] rounded-md px-2.5 py-1.5"
+                          >
+                            <iconify-icon icon="solar:pen-linear" stroke-width="1.5" class="text-sm"></iconify-icon>
+                            <span className="text-xs">Editar</span>
+                          </button>
+                          <button
+                            onClick={() => handleDelete(seller)}
+                            className="flex items-center justify-center border border-red-500/30 text-[#E2E8F0] hover:text-[#EF4444] hover:bg-[#EF4444]/10 p-1.5 rounded-md transition-colors"
+                            title="Eliminar"
+                          >
+                            <iconify-icon icon="solar:trash-bin-trash-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 

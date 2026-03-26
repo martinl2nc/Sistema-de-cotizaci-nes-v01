@@ -111,7 +111,7 @@ export default function QuotesList() {
   };
 
   return (
-    <div className="max-w-7xl w-full mx-auto flex flex-col h-full">
+    <div className="max-w-7xl w-full mx-auto flex flex-col md:h-full">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <h1 className="text-2xl font-semibold tracking-tight text-[#E2E8F0]">
@@ -182,63 +182,39 @@ export default function QuotesList() {
       </div>
 
       {/* Data Grid */}
-      <div className="bg-[#181B21] border border-[#334155] rounded-lg overflow-hidden flex flex-col shadow-sm mb-6 flex-1">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[1000px]">
-            <thead>
-              <tr className="border-b border-[#334155] bg-[#0F1115]">
-                <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[100px]">ID</th>
-                <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[120px]">Fecha</th>
-                <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase">Cliente</th>
-                <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[160px]">Vendedor</th>
-                <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[120px] text-right">Total</th>
-                <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[140px]">Estado</th>
-                <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[90px] text-center" title="Seguimiento automático por email (solo cotizaciones Enviadas)">Seguim.</th>
-                <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[200px] text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#334155] bg-[#181B21]">
-              {isLoading && (
-                <tr>
-                  <td colSpan={8} className="px-5 py-8 text-center text-[#94A3B8] text-sm">
-                    <div className="flex items-center justify-center gap-2">
-                      <iconify-icon icon="solar:spinner-linear" class="animate-spin text-xl text-[#3B82F6]"></iconify-icon>
-                      Cargando cotizaciones...
-                    </div>
-                  </td>
-                </tr>
-              )}
-              
-              {!isLoading && isError && (
-                <tr>
-                  <td colSpan={8} className="px-5 py-8 text-center text-red-400 text-sm">
-                    {error instanceof Error ? error.message : 'Error desconocido'}
-                  </td>
-                </tr>
-              )}
+      <div className="bg-[#181B21] border border-[#334155] rounded-lg md:overflow-hidden flex flex-col shadow-sm mb-6 md:flex-1">
+        {/* Shared: loading / error / empty states */}
+        {isLoading && (
+          <div className="flex items-center justify-center gap-2 p-8 text-[#94A3B8] text-sm">
+            <iconify-icon icon="solar:spinner-linear" class="animate-spin text-xl text-[#3B82F6]"></iconify-icon>
+            Cargando cotizaciones...
+          </div>
+        )}
+        {!isLoading && isError && (
+          <div className="p-8 text-center text-red-400 text-sm">
+            {error instanceof Error ? error.message : 'Error desconocido'}
+          </div>
+        )}
+        {!isLoading && !isError && filteredQuotes.length === 0 && (
+          <div className="p-8 text-center text-[#94A3B8] text-sm">
+            No se encontraron cotizaciones con los filtros aplicados.
+          </div>
+        )}
 
-              {!isLoading && !isError && filteredQuotes.length === 0 && (
-                <tr>
-                  <td colSpan={8} className="px-5 py-8 text-center text-[#94A3B8] text-sm">
-                    No se encontraron cotizaciones con los filtros aplicados.
-                  </td>
-                </tr>
-              )}
-
-              {!isLoading && !isError && filteredQuotes.map((quote) => (
-                <tr key={quote.id} className="group hover:bg-[#334155]/10 transition-colors">
-                  <td className="px-5 py-3.5 text-sm text-[#E2E8F0] font-medium">COT-{quote.numero_correlativo}</td>
-                  <td className="px-5 py-3.5 text-sm text-[#94A3B8]">{formatDate(quote.fecha_emision)}</td>
-                  <td className="px-5 py-3.5 text-sm text-[#E2E8F0]">{getClientName(quote.clientes)}</td>
-                  <td className="px-5 py-3.5 text-sm text-[#94A3B8]">{getSellerName(quote.perfiles_usuario)}</td>
-                  <td className="px-5 py-3.5 text-sm text-[#E2E8F0] font-medium text-right">{formatCurrency(quote.total_final)}</td>
-                  <td className="px-5 py-3.5 text-sm uppercase">
-                    <select 
+        {!isLoading && !isError && filteredQuotes.length > 0 && (
+          <>
+            {/* Mobile cards */}
+            <div className="md:hidden space-y-3 p-4">
+              {filteredQuotes.map((quote) => (
+                <div key={quote.id} className="bg-[#0F1115] border border-[#334155] rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-[#E2E8F0]">COT-{quote.numero_correlativo}</span>
+                    <select
                       value={quote.estado}
                       onChange={(e) => handleStatusChange(quote.id, e.target.value)}
                       className={`text-[10px] font-bold px-2 py-1 rounded-full border-none cursor-pointer focus:ring-1 focus:ring-blue-500 transition-colors
-                        ${quote.estado === 'Aprobada' || quote.estado === 'Enviada' ? 'bg-[#10B981]/10 text-[#10B981]' : 
-                          quote.estado === 'PDF Generado' ? 'bg-[#F59E0B]/10 text-[#F59E0B]' : 
+                        ${quote.estado === 'Aprobada' || quote.estado === 'Enviada' ? 'bg-[#10B981]/10 text-[#10B981]' :
+                          quote.estado === 'PDF Generado' ? 'bg-[#F59E0B]/10 text-[#F59E0B]' :
                           quote.estado === 'Borrador' ? 'bg-[#94A3B8]/10 text-[#94A3B8]' :
                           'bg-[#EF4444]/10 text-[#EF4444]'}`}
                     >
@@ -248,42 +224,130 @@ export default function QuotesList() {
                       <option value="Enviada" className="bg-[#181B21]">Enviada</option>
                       <option value="Cancelada" className="bg-[#181B21]">Cancelada</option>
                     </select>
-                  </td>
-                  <td className="px-5 py-3.5 text-center">
-                    {quote.estado === 'Enviada' ? (
-                      <input
-                        type="checkbox"
-                        checked={quote.seguimiento_automatico ?? true}
-                        onChange={() => updateFollowupMutation.mutate({ id: quote.id, value: !(quote.seguimiento_automatico ?? true) })}
-                        disabled={updateFollowupMutation.isPending}
-                        title={quote.seguimiento_automatico ? 'Seguimiento activo — click para desactivar' : 'Seguimiento inactivo — click para activar'}
-                        className="w-4 h-4 rounded accent-[#A855F7] cursor-pointer disabled:opacity-50"
-                      />
-                    ) : (
-                      <span className="text-[#334155]">—</span>
+                  </div>
+
+                  <p className="text-sm text-[#E2E8F0]">{getClientName(quote.clientes)}</p>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-[#94A3B8]">{formatDate(quote.fecha_emision)}</span>
+                    <span className="text-sm font-semibold text-[#E2E8F0]">{formatCurrency(quote.total_final)}</span>
+                  </div>
+
+                  <p className="text-xs text-[#94A3B8]">
+                    Vendedor: {getSellerName(quote.perfiles_usuario)}
+                  </p>
+
+                  <div className="flex items-center gap-2 pt-2 border-t border-[#334155]">
+                    {quote.estado === 'Enviada' && (
+                      <label className="flex items-center gap-1.5 text-xs text-[#94A3B8] cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={quote.seguimiento_automatico ?? true}
+                          onChange={() => updateFollowupMutation.mutate({ id: quote.id, value: !(quote.seguimiento_automatico ?? true) })}
+                          disabled={updateFollowupMutation.isPending}
+                          className="w-4 h-4 rounded accent-[#A855F7] cursor-pointer disabled:opacity-50"
+                        />
+                        Seguim.
+                      </label>
                     )}
-                  </td>
-                  <td className="px-5 py-3.5 text-right flex items-center justify-end gap-2">
-                    <button 
-                      onClick={() => navigate(`/cotizaciones/editar/${quote.id}`)}
-                      className="border border-[#334155] text-white text-xs font-medium px-3 py-1.5 rounded-md hover:bg-[#334155]/50 transition-colors whitespace-nowrap"
-                    >
-                      Editar
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(quote.id)}
-                      disabled={deleteMutation.isPending}
-                      className="border border-red-500/50 text-red-500 text-xs font-medium px-2 py-1.5 rounded-md hover:bg-red-500/10 transition-colors disabled:opacity-50"
-                      title="Eliminar"
-                    >
-                      <iconify-icon icon="solar:trash-bin-trash-linear" class="text-lg"></iconify-icon>
-                    </button>
-                  </td>
-                </tr>
+                    <div className="flex items-center gap-2 ml-auto">
+                      <button
+                        onClick={() => navigate(`/cotizaciones/editar/${quote.id}`)}
+                        className="border border-[#334155] text-white text-xs font-medium px-3 py-1.5 rounded-md hover:bg-[#334155]/50 transition-colors"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDelete(quote.id)}
+                        disabled={deleteMutation.isPending}
+                        className="border border-red-500/50 text-red-500 text-xs font-medium px-2 py-1.5 rounded-md hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                        title="Eliminar"
+                      >
+                        <iconify-icon icon="solar:trash-bin-trash-linear" class="text-lg"></iconify-icon>
+                      </button>
+                    </div>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[1000px]">
+                <thead>
+                  <tr className="border-b border-[#334155] bg-[#0F1115]">
+                    <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[100px]">ID</th>
+                    <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[120px]">Fecha</th>
+                    <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase">Cliente</th>
+                    <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[160px]">Vendedor</th>
+                    <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[120px] text-right">Total</th>
+                    <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[140px]">Estado</th>
+                    <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[90px] text-center" title="Seguimiento automático por email (solo cotizaciones Enviadas)">Seguim.</th>
+                    <th className="px-5 py-3 text-xs font-medium tracking-wider text-[#94A3B8] uppercase w-[200px] text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#334155] bg-[#181B21]">
+                  {filteredQuotes.map((quote) => (
+                    <tr key={quote.id} className="group hover:bg-[#334155]/10 transition-colors">
+                      <td className="px-5 py-3.5 text-sm text-[#E2E8F0] font-medium">COT-{quote.numero_correlativo}</td>
+                      <td className="px-5 py-3.5 text-sm text-[#94A3B8]">{formatDate(quote.fecha_emision)}</td>
+                      <td className="px-5 py-3.5 text-sm text-[#E2E8F0]">{getClientName(quote.clientes)}</td>
+                      <td className="px-5 py-3.5 text-sm text-[#94A3B8]">{getSellerName(quote.perfiles_usuario)}</td>
+                      <td className="px-5 py-3.5 text-sm text-[#E2E8F0] font-medium text-right">{formatCurrency(quote.total_final)}</td>
+                      <td className="px-5 py-3.5 text-sm uppercase">
+                        <select
+                          value={quote.estado}
+                          onChange={(e) => handleStatusChange(quote.id, e.target.value)}
+                          className={`text-[10px] font-bold px-2 py-1 rounded-full border-none cursor-pointer focus:ring-1 focus:ring-blue-500 transition-colors
+                            ${quote.estado === 'Aprobada' || quote.estado === 'Enviada' ? 'bg-[#10B981]/10 text-[#10B981]' :
+                              quote.estado === 'PDF Generado' ? 'bg-[#F59E0B]/10 text-[#F59E0B]' :
+                              quote.estado === 'Borrador' ? 'bg-[#94A3B8]/10 text-[#94A3B8]' :
+                              'bg-[#EF4444]/10 text-[#EF4444]'}`}
+                        >
+                          <option value="Borrador" className="bg-[#181B21]">Borrador</option>
+                          <option value="Aprobada" className="bg-[#181B21]">Aprobada</option>
+                          <option value="PDF Generado" className="bg-[#181B21]">PDF Generado</option>
+                          <option value="Enviada" className="bg-[#181B21]">Enviada</option>
+                          <option value="Cancelada" className="bg-[#181B21]">Cancelada</option>
+                        </select>
+                      </td>
+                      <td className="px-5 py-3.5 text-center">
+                        {quote.estado === 'Enviada' ? (
+                          <input
+                            type="checkbox"
+                            checked={quote.seguimiento_automatico ?? true}
+                            onChange={() => updateFollowupMutation.mutate({ id: quote.id, value: !(quote.seguimiento_automatico ?? true) })}
+                            disabled={updateFollowupMutation.isPending}
+                            title={quote.seguimiento_automatico ? 'Seguimiento activo — click para desactivar' : 'Seguimiento inactivo — click para activar'}
+                            className="w-4 h-4 rounded accent-[#A855F7] cursor-pointer disabled:opacity-50"
+                          />
+                        ) : (
+                          <span className="text-[#334155]">—</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3.5 text-right flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => navigate(`/cotizaciones/editar/${quote.id}`)}
+                          className="border border-[#334155] text-white text-xs font-medium px-3 py-1.5 rounded-md hover:bg-[#334155]/50 transition-colors whitespace-nowrap"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDelete(quote.id)}
+                          disabled={deleteMutation.isPending}
+                          className="border border-red-500/50 text-red-500 text-xs font-medium px-2 py-1.5 rounded-md hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                          title="Eliminar"
+                        >
+                          <iconify-icon icon="solar:trash-bin-trash-linear" class="text-lg"></iconify-icon>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
