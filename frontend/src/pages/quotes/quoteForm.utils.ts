@@ -34,6 +34,7 @@ export const getInitialQuoteData = (): QuoteFormData => {
     igv_monto: 0,
     total_final: 0,
     estado: 'Borrador',
+    seguimiento_automatico: true,
     lineas: [],
   };
 };
