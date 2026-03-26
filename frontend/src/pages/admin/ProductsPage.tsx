@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { toast } from 'sonner';
 import AdminTabs from '@/components/admin/AdminTabs';
 import { useProductsList, useCreateProduct, useUpdateProduct, useToggleProductActive } from '@/hooks/useProducts';
 import ProductDrawer from '@/features/products/ProductDrawer';
@@ -48,11 +49,21 @@ export default function ProductsPage() {
     if (editingProduct) {
       updateMutation.mutate(
         { id: editingProduct.id, data },
-        { onSuccess: () => handleCloseDrawer() }
+        {
+          onSuccess: () => {
+            toast.success('Producto actualizado correctamente.');
+            handleCloseDrawer();
+          },
+          onError: (err) => toast.error(err.message),
+        }
       );
     } else {
       createMutation.mutate(data, {
-        onSuccess: () => handleCloseDrawer(),
+        onSuccess: () => {
+          toast.success('Producto creado correctamente.');
+          handleCloseDrawer();
+        },
+        onError: (err) => toast.error(err.message),
       });
     }
   };

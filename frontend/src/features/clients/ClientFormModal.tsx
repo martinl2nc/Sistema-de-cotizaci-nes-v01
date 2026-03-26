@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useCreateClient, useUpdateClient } from '@/hooks/useClients';
 import type { Client, ClientFormData } from '@/services/clients.service';
 
@@ -82,19 +83,21 @@ export default function ClientFormModal({ isOpen, onClose, client, onSuccess }: 
         { id: client.id, data: formData },
         {
           onSuccess: (updatedClient) => {
+            toast.success('Cliente actualizado correctamente.');
             if (onSuccess && updatedClient) onSuccess(updatedClient);
             onClose();
           },
-          onError: (err) => setError(err.message),
+          onError: (err) => toast.error(err.message),
         }
       );
     } else {
       createMutation.mutate(formData, {
         onSuccess: (newClient) => {
+          toast.success('Cliente creado correctamente.');
           if (onSuccess && newClient) onSuccess(newClient);
           onClose();
         },
-        onError: (err) => setError(err.message),
+        onError: (err) => toast.error(err.message),
       });
     }
   };

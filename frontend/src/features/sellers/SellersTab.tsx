@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { toast } from 'sonner';
 import { useSellersList, useDeleteSeller, useToggleSellerActive } from '@/hooks/useSellers';
 import SellerFormModal from './SellerFormModal';
 import type { Seller } from '@/services/sellers.service';
@@ -25,7 +26,8 @@ export default function SellersTab() {
     const confirmed = window.confirm(`¿Eliminar al vendedor "${seller.nombre}"?`);
     if (!confirmed) return;
     deleteMutation.mutate(seller.id, {
-      onError: (err) => alert(err.message),
+      onSuccess: () => toast.success(`Vendedor "${seller.nombre}" eliminado.`),
+      onError: (err) => toast.error(err.message),
     });
   };
 

@@ -55,7 +55,7 @@ export const dashboardService = {
     let qConv = supabase
       .from('cotizaciones')
       .select('id', { count: 'exact', head: true })
-      .in('estado', ['Aprobada', 'PDF Generado', 'Enviada']);
+      .in('estado', ['Aprobada', 'Enviada']);
     if (vendedorId) qConv = qConv.eq('vendedor_id', vendedorId);
     const { count: totalConv } = await qConv;
 

@@ -9,7 +9,6 @@ import { useAuth } from '@/context/AuthContext';
 const ESTADO_COLORS: Record<string, string> = {
   'Borrador':      '#94A3B8',
   'Aprobada':      '#22C55E',
-  'PDF Generado':  '#3B82F6',
   'Enviada':       '#A855F7',
   'Cancelada':     '#EF4444',
 };

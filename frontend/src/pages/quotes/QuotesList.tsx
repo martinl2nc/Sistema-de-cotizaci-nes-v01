@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuotesList, useUpdateQuoteStatus, useDeleteQuote, useUpdateQuoteFollowup } from '@/hooks/useQuotes';
 import { useSellersList } from '@/hooks/useSellers';
 import type { Quote, QuoteStatus } from '@/services/quotes.service';
+import EmailHistoryModal from '@/features/quotes/EmailHistoryModal';
 
 export default function QuotesList() {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ export default function QuotesList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSeller, setSelectedSeller] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [historyQuote, setHistoryQuote] = useState<{ id: string; idStr: string } | null>(null);
 
   // ─── Event Handlers ─────────────────────────────────────────
 
@@ -156,8 +158,8 @@ export default function QuotesList() {
             >
               <option value="">Por Estado</option>
               <option value="Borrador">Borrador</option>
-              <option value="PDF Generado">PDF Generado</option>
               <option value="Enviada">Enviada</option>
+              <option value="Aprobada">Aprobada</option>
               <option value="Cancelada">Cancelada</option>
             </select>
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#94A3B8] group-hover:text-[#E2E8F0] transition-colors">
@@ -214,13 +216,11 @@ export default function QuotesList() {
                       onChange={(e) => handleStatusChange(quote.id, e.target.value)}
                       className={`text-[10px] font-bold px-2 py-1 rounded-full border-none cursor-pointer focus:ring-1 focus:ring-blue-500 transition-colors
                         ${quote.estado === 'Aprobada' || quote.estado === 'Enviada' ? 'bg-[#10B981]/10 text-[#10B981]' :
-                          quote.estado === 'PDF Generado' ? 'bg-[#F59E0B]/10 text-[#F59E0B]' :
                           quote.estado === 'Borrador' ? 'bg-[#94A3B8]/10 text-[#94A3B8]' :
                           'bg-[#EF4444]/10 text-[#EF4444]'}`}
                     >
                       <option value="Borrador" className="bg-[#181B21]">Borrador</option>
                       <option value="Aprobada" className="bg-[#181B21]">Aprobada</option>
-                      <option value="PDF Generado" className="bg-[#181B21]">PDF Generado</option>
                       <option value="Enviada" className="bg-[#181B21]">Enviada</option>
                       <option value="Cancelada" className="bg-[#181B21]">Cancelada</option>
                     </select>
@@ -251,6 +251,13 @@ export default function QuotesList() {
                       </label>
                     )}
                     <div className="flex items-center gap-2 ml-auto">
+                      <button
+                        onClick={() => setHistoryQuote({ id: quote.id, idStr: `COT-${quote.numero_correlativo}` })}
+                        className="border border-[#334155] text-[#94A3B8] text-xs font-medium px-2 py-1.5 rounded-md hover:bg-[#334155]/50 hover:text-[#E2E8F0] transition-colors"
+                        title="Historial de envíos"
+                      >
+                        <iconify-icon icon="solar:history-2-linear" class="text-lg"></iconify-icon>
+                      </button>
                       <button
                         onClick={() => navigate(`/cotizaciones/editar/${quote.id}`)}
                         className="border border-[#334155] text-white text-xs font-medium px-3 py-1.5 rounded-md hover:bg-[#334155]/50 transition-colors"
@@ -300,13 +307,11 @@ export default function QuotesList() {
                           onChange={(e) => handleStatusChange(quote.id, e.target.value)}
                           className={`text-[10px] font-bold px-2 py-1 rounded-full border-none cursor-pointer focus:ring-1 focus:ring-blue-500 transition-colors
                             ${quote.estado === 'Aprobada' || quote.estado === 'Enviada' ? 'bg-[#10B981]/10 text-[#10B981]' :
-                              quote.estado === 'PDF Generado' ? 'bg-[#F59E0B]/10 text-[#F59E0B]' :
                               quote.estado === 'Borrador' ? 'bg-[#94A3B8]/10 text-[#94A3B8]' :
                               'bg-[#EF4444]/10 text-[#EF4444]'}`}
                         >
                           <option value="Borrador" className="bg-[#181B21]">Borrador</option>
                           <option value="Aprobada" className="bg-[#181B21]">Aprobada</option>
-                          <option value="PDF Generado" className="bg-[#181B21]">PDF Generado</option>
                           <option value="Enviada" className="bg-[#181B21]">Enviada</option>
                           <option value="Cancelada" className="bg-[#181B21]">Cancelada</option>
                         </select>
@@ -326,6 +331,13 @@ export default function QuotesList() {
                         )}
                       </td>
                       <td className="px-5 py-3.5 text-right flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => setHistoryQuote({ id: quote.id, idStr: `COT-${quote.numero_correlativo}` })}
+                          className="border border-[#334155] text-[#94A3B8] text-xs font-medium px-2 py-1.5 rounded-md hover:bg-[#334155]/50 hover:text-[#E2E8F0] transition-colors"
+                          title="Historial de envíos"
+                        >
+                          <iconify-icon icon="solar:history-2-linear" class="text-lg"></iconify-icon>
+                        </button>
                         <button
                           onClick={() => navigate(`/cotizaciones/editar/${quote.id}`)}
                           className="border border-[#334155] text-white text-xs font-medium px-3 py-1.5 rounded-md hover:bg-[#334155]/50 transition-colors whitespace-nowrap"
@@ -349,6 +361,13 @@ export default function QuotesList() {
           </>
         )}
       </div>
+
+      <EmailHistoryModal
+        isOpen={Boolean(historyQuote)}
+        onClose={() => setHistoryQuote(null)}
+        cotizacionId={historyQuote?.id ?? null}
+        quoteIdStr={historyQuote?.idStr ?? ''}
+      />
     </div>
   );
 }

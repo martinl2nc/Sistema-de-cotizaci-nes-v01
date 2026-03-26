@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useCreateSeller, useUpdateSeller } from '@/hooks/useSellers';
 import type { Seller, SellerFormData } from '@/services/sellers.service';
 
@@ -66,14 +67,20 @@ export default function SellerFormModal({ isOpen, onClose, seller }: SellerFormM
       updateMutation.mutate(
         { id: seller.id, data: formData },
         {
-          onSuccess: () => onClose(),
-          onError: (err) => setError(err.message),
+          onSuccess: () => {
+            toast.success('Vendedor actualizado correctamente.');
+            onClose();
+          },
+          onError: (err) => toast.error(err.message),
         }
       );
     } else {
       createMutation.mutate(formData, {
-        onSuccess: () => onClose(),
-        onError: (err) => setError(err.message),
+        onSuccess: () => {
+          toast.success('Vendedor creado correctamente.');
+          onClose();
+        },
+        onError: (err) => toast.error(err.message),
       });
     }
   };

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 import { useCompanyConfig, useSaveCompanyConfig, useUploadCompanyLogo, useDeleteCompanyLogo } from '@/hooks/useCompanyConfig';
 import AdminTabs from '@/components/admin/AdminTabs';
 import type { CompanyConfigFormData } from '@/services/companyConfig.service';
@@ -20,7 +21,6 @@ export default function CompanyConfigPage() {
 
   const [formData, setFormData] = useState<CompanyConfigFormData>(initialFormState);
   const [initialized, setInitialized] = useState(false);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -59,13 +59,13 @@ export default function CompanyConfigPage() {
 
     // Validate size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      setErrorMsg('El logo debe pesar máximo 2MB.');
+      toast.error('El logo debe pesar máximo 2MB.');
       return;
     }
 
     // Validate type
     if (!['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'].includes(file.type)) {
-      setErrorMsg('Formato no soportado. Usa PNG, JPG, WEBP o SVG.');
+      toast.error('Formato no soportado. Usa PNG, JPG, WEBP o SVG.');
       return;
     }
 
@@ -84,15 +84,10 @@ export default function CompanyConfigPage() {
 
       // 4. Save automatically to DB
       await saveMutation.mutateAsync({ id: config?.id ?? null, data: newFormData });
-      setSuccessMsg('Logo subido y guardado correctamente.');
-      setTimeout(() => setSuccessMsg(null), 4000);
+      toast.success('Logo subido y guardado correctamente.');
 
     } catch (err: unknown) {
-        if (err instanceof Error) {
-            setErrorMsg(err.message);
-        } else {
-             setErrorMsg('Error al subir el logo.');
-        }
+        toast.error(err instanceof Error ? err.message : 'Error al subir el logo.');
     }
   };
 
@@ -110,22 +105,15 @@ export default function CompanyConfigPage() {
 
       // 3. Save to DB
       await saveMutation.mutateAsync({ id: config?.id ?? null, data: newFormData });
-      
-      setSuccessMsg('Logo eliminado correctamente.');
-      setTimeout(() => setSuccessMsg(null), 4000);
+      toast.success('Logo eliminado correctamente.');
     } catch (err: unknown) {
-        if (err instanceof Error) {
-            setErrorMsg(err.message);
-        } else {
-             setErrorMsg('Error al eliminar el logo.');
-        }
+        toast.error(err instanceof Error ? err.message : 'Error al eliminar el logo.');
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
-    setSuccessMsg(null);
 
     if (!formData.razon_social.trim()) {
       setErrorMsg('La Razón Social es obligatoria.');
@@ -139,11 +127,8 @@ export default function CompanyConfigPage() {
     saveMutation.mutate(
       { id: config?.id ?? null, data: formData },
       {
-        onSuccess: () => {
-          setSuccessMsg('Configuración guardada correctamente.');
-          setTimeout(() => setSuccessMsg(null), 4000);
-        },
-        onError: (err) => setErrorMsg(err.message),
+        onSuccess: () => toast.success('Configuración guardada correctamente.'),
+        onError: (err) => toast.error(err.message),
       }
     );
   };
@@ -253,12 +238,6 @@ export default function CompanyConfigPage() {
 
 
           {/* Alerts */}
-          {successMsg && (
-            <div className="mb-6 bg-[#10B981]/10 border border-[#10B981]/50 rounded-lg p-4 text-[#10B981] text-sm font-medium flex items-center gap-2">
-              <iconify-icon icon="solar:check-circle-linear" class="text-lg"></iconify-icon>
-              {successMsg}
-            </div>
-          )}
           {errorMsg && (
             <div className="mb-6 bg-[#EF4444]/10 border border-[#EF4444]/50 rounded-lg p-4 text-[#EF4444] text-sm font-medium">
               {errorMsg}

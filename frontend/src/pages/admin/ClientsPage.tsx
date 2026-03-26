@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { toast } from 'sonner';
 import { useClientsList, useToggleClientActive, useDeleteClient } from '@/hooks/useClients';
 import ClientFormModal from '@/features/clients/ClientFormModal';
 import SellersTab from '@/features/sellers/SellersTab';
@@ -40,7 +41,8 @@ export default function ClientsPage() {
     if (!confirmed) return;
 
     deleteClientMutation.mutate(client.id, {
-      onError: (err) => alert(err.message),
+      onSuccess: () => toast.success('Cliente eliminado correctamente.'),
+      onError: (err) => toast.error(err.message),
     });
   };
 

@@ -1,15 +1,18 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { pdf } from '@react-pdf/renderer';
 
 import { useQuoteDetail, useSaveQuote, useDeleteQuote, useSendQuoteWebhook } from '@/hooks/useQuotes';
+import { useLogEmailSend } from '@/hooks/useEmailHistory';
 import { useClientsList, useActiveClientsList, clientsKeys } from '@/hooks/useClients';
 import { useSellersList } from '@/hooks/useSellers';
 import { useProductsList } from '@/hooks/useProducts';
 import { useCompanyConfig } from '@/hooks/useCompanyConfig';
 
 import ClientFormModal from '@/features/clients/ClientFormModal';
+import QuotePDFPreviewModal from './QuotePDFPreviewModal';
 import type { Client } from '@/services/clients.service';
 import type { QuoteFormData, QuoteStatus } from '@/services/quotes.service';
 import { isWebhookConfigured, buildWebhookPayload } from '@/services/webhook.service';
@@ -33,6 +36,7 @@ export default function QuoteForm() {
   const saveQuoteMutation = useSaveQuote();
   const deleteQuoteMutation = useDeleteQuote();
   const webhookMutation = useSendQuoteWebhook();
+  const logEmailSendMutation = useLogEmailSend();
   const queryClient = useQueryClient();
 
   const loadingClients = loadingActiveClients || loadingAllClients;
@@ -41,9 +45,13 @@ export default function QuoteForm() {
 
   const [error, setError] = useState<string | null>(null);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  const [isSendingQuote, setIsSendingQuote] = useState(false);
-  const [quoteSentMessage, setQuoteSentMessage] = useState<string | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+  const [pdfQuoteIdStr, setPdfQuoteIdStr] = useState('');
+  const [savedQuoteId, setSavedQuoteId] = useState<string | null>(null);
   const [showMobileTotals, setShowMobileTotals] = useState(false);
 
   const {
@@ -95,17 +103,16 @@ export default function QuoteForm() {
       onSuccess: () => {
         if (!skipNavigation) navigate('/cotizaciones');
       },
-      onError: (err) => setError('Error al guardar cotización: ' + err.message)
+      onError: (err) => toast.error('Error al guardar cotización: ' + err.message)
     });
   };
 
-  const handleGeneratePDF = async () => {
+  const handleOpenPreview = async () => {
     const validationError = validateQuoteForm(quoteData, lineItems);
     if (validationError) { setError(validationError); return; }
 
-    setIsGeneratingPDF(true);
+    setIsPreviewLoading(true);
     setError(null);
-    setQuoteSentMessage(null);
     webhookMutation.reset();
 
     try {
@@ -114,7 +121,8 @@ export default function QuoteForm() {
 
       const finalQuoteData: QuoteFormData = {
         ...quoteData,
-        estado: 'PDF Generado',
+        id: savedQuoteId || quoteData.id,
+        estado: quoteData.estado,
         vendedor_id: quoteData.vendedor_id || null,
         subtotal: totals.subtotal,
         igv_monto: totals.igv_monto,
@@ -138,23 +146,40 @@ export default function QuoteForm() {
         />
       );
       const blob = await pdf(doc).toBlob();
-      downloadBlob(blob, `${quoteIdStr}.pdf`);
+      const blobUrl = URL.createObjectURL(blob);
+
+      setSavedQuoteId(savedQuote.id);
+      setPdfBlob(blob);
+      setPdfBlobUrl(blobUrl);
+      setPdfQuoteIdStr(quoteIdStr);
+      setIsPDFModalOpen(true);
     } catch (err: any) {
       console.error(err);
-      setError(err?.message || 'Error al generar el PDF.');
+      toast.error(err?.message || 'Error al generar la vista previa.');
     } finally {
-      setIsGeneratingPDF(false);
+      setIsPreviewLoading(false);
     }
   };
 
-  const handleSendQuote = async () => {
-    const validationError = validateQuoteForm(quoteData, lineItems);
-    if (validationError) { setError(validationError); return; }
+  const handleClosePreviewModal = () => {
+    setIsPDFModalOpen(false);
+    if (pdfBlobUrl) {
+      URL.revokeObjectURL(pdfBlobUrl);
+      setPdfBlobUrl(null);
+    }
+    setPdfBlob(null);
+  };
 
-    setIsSendingQuote(true);
-    setError(null);
-    setQuoteSentMessage(null);
-    webhookMutation.reset();
+  const handleDownloadFromModal = () => {
+    if (pdfBlob && pdfQuoteIdStr) {
+      downloadBlob(pdfBlob, `${pdfQuoteIdStr}.pdf`);
+    }
+  };
+
+  const handleSendFromModal = async () => {
+    if (!pdfBlob || !pdfQuoteIdStr) return;
+
+    setIsSending(true);
 
     try {
       const client = allClients.find(c => c.id === quoteData.cliente_id) || null;
@@ -162,6 +187,7 @@ export default function QuoteForm() {
 
       const finalQuoteData: QuoteFormData = {
         ...quoteData,
+        id: savedQuoteId || quoteData.id,
         estado: 'Enviada',
         vendedor_id: quoteData.vendedor_id || null,
         subtotal: totals.subtotal,
@@ -170,49 +196,44 @@ export default function QuoteForm() {
         lineas: lineItems
       };
 
-      const savedQuote = await saveQuoteMutation.mutateAsync(finalQuoteData);
-      const quoteIdStr = `COT-${savedQuote.numero_correlativo}`;
-
-      const doc = (
-        <QuotePDFDocument
-          quoteData={{ ...quoteData, id: savedQuote.id }}
-          totals={totals}
-          lineItems={lineItems}
-          client={client}
-          sellerName={seller?.nombre || ''}
-          quoteIdStr={quoteIdStr}
-          companyConfig={companyConfig}
-          products={products}
-        />
-      );
-      const blob = await pdf(doc).toBlob();
+      await saveQuoteMutation.mutateAsync(finalQuoteData);
 
       if (isWebhookConfigured() && client?.email) {
-        const pdfBase64 = await blobToBase64(blob);
+        const pdfBase64 = await blobToBase64(pdfBlob);
         const payload = buildWebhookPayload({
           pdfBase64,
-          pdfFilename: `${quoteIdStr}.pdf`,
+          pdfFilename: `${pdfQuoteIdStr}.pdf`,
           client,
           sellerName: seller?.nombre || 'No asignado',
-          quoteIdStr,
+          quoteIdStr: pdfQuoteIdStr,
           totalFinal: totals.total_final,
           fechaEmision: quoteData.fecha_emision,
         });
         if (payload) {
-          await webhookMutation.mutateAsync(payload);
-          setQuoteSentMessage(`Cotización ${quoteIdStr} enviada al cliente`);
+          try {
+            await webhookMutation.mutateAsync(payload);
+            toast.success(`Cotización ${pdfQuoteIdStr} enviada al cliente`);
+            const cotizacionId = savedQuoteId || quoteData.id;
+            if (cotizacionId) {
+              logEmailSendMutation.mutate({ cotizacionId, email: client.email! });
+            }
+          } catch {
+            toast.warning(`Cotización ${pdfQuoteIdStr} guardada — error al enviar el correo`);
+          }
         } else {
-          setQuoteSentMessage(`Cotización ${quoteIdStr} guardada como Enviada`);
+          toast.success(`Cotización ${pdfQuoteIdStr} guardada como Enviada`);
         }
       } else {
-        setQuoteSentMessage(`Cotización ${quoteIdStr} guardada como Enviada`);
+        toast.success(`Cotización ${pdfQuoteIdStr} guardada como Enviada`);
       }
-      setTimeout(() => setQuoteSentMessage(null), 5000);
+
+      handleClosePreviewModal();
+      navigate('/cotizaciones');
     } catch (err: any) {
       console.error(err);
-      setError(err?.message || 'Error al enviar la cotización.');
+      toast.error(err?.message || 'Error al enviar la cotización.');
     } finally {
-      setIsSendingQuote(false);
+      setIsSending(false);
     }
   };
 
@@ -224,11 +245,11 @@ export default function QuoteForm() {
 
     deleteQuoteMutation.mutate(id, {
       onSuccess: () => navigate('/cotizaciones'),
-      onError: (err) => setError('Error al eliminar: ' + err.message)
+      onError: (err) => toast.error('Error al eliminar: ' + err.message)
     });
   };
 
-  const isSaving = saveQuoteMutation.isPending || deleteQuoteMutation.isPending || isGeneratingPDF || isSendingQuote;
+  const isSaving = saveQuoteMutation.isPending || deleteQuoteMutation.isPending || isPreviewLoading;
 
   // ─── Loading / Error states ─────────────────────────────────
   if (loading) {
@@ -259,8 +280,7 @@ export default function QuoteForm() {
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-medium tracking-tight text-[#E2E8F0]">{currentDisplayId}</h1>
           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border 
-            ${quoteData.estado === 'Aprobada' || quoteData.estado === 'Enviada' ? 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20' : 
-              quoteData.estado === 'PDF Generado' ? 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/20' : 
+            ${quoteData.estado === 'Aprobada' || quoteData.estado === 'Enviada' ? 'bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20' :
               quoteData.estado === 'Borrador' ? 'bg-[#94A3B8]/10 text-[#94A3B8] border-[#94A3B8]/20' :
             'bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/20'}`}>
             {quoteData.estado}
@@ -566,26 +586,12 @@ export default function QuoteForm() {
           </div>
 
           {/* Send status */}
-          {(quoteSentMessage || webhookMutation.isPending || webhookMutation.isError) && (
+          {webhookMutation.isPending && (
             <div className="pt-1">
-              {webhookMutation.isPending && (
-                <span className="text-[10px] text-[#94A3B8] flex items-center gap-1 animate-pulse">
-                  <iconify-icon icon="solar:spinner-linear" class="animate-spin text-[#3B82F6]"></iconify-icon>
-                  Enviando cotización...
-                </span>
-              )}
-              {quoteSentMessage && !webhookMutation.isPending && !webhookMutation.isError && (
-                <span className="text-[10px] text-[#10B981] flex items-center gap-1">
-                  <iconify-icon icon="solar:check-circle-linear"></iconify-icon>
-                  {quoteSentMessage}
-                </span>
-              )}
-              {webhookMutation.isError && (
-                <span className="text-[10px] text-[#F59E0B] flex items-center gap-1">
-                  <iconify-icon icon="solar:danger-triangle-linear"></iconify-icon>
-                  Error al enviar — cotización guardada como Enviada
-                </span>
-              )}
+              <span className="text-[10px] text-[#94A3B8] flex items-center gap-1 animate-pulse">
+                <iconify-icon icon="solar:spinner-linear" class="animate-spin text-[#3B82F6]"></iconify-icon>
+                Enviando cotización...
+              </span>
             </div>
           )}
 
@@ -611,25 +617,15 @@ export default function QuoteForm() {
             </button>
           </div>
 
-          {/* Actions — row 2: PDF + send */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleGeneratePDF}
-              disabled={isSaving}
-              className="flex-1 flex items-center justify-center gap-1.5 border border-[#334155] text-[#E2E8F0] hover:bg-[#334155]/40 px-3 py-2 rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
-            >
-              <iconify-icon icon="solar:file-download-linear" class="text-base"></iconify-icon>
-              {isGeneratingPDF ? 'Generando...' : 'Generar PDF'}
-            </button>
-            <button
-              onClick={handleSendQuote}
-              disabled={isSaving}
-              className="flex-1 flex items-center justify-center gap-1.5 bg-[#10B981] hover:bg-[#059669] text-white px-3 py-2 rounded-lg text-xs font-medium shadow-sm transition-colors disabled:opacity-50"
-            >
-              <iconify-icon icon="solar:letter-linear" class="text-base"></iconify-icon>
-              {isSendingQuote ? 'Enviando...' : 'Enviar Cot.'}
-            </button>
-          </div>
+          {/* Actions — row 2: preview */}
+          <button
+            onClick={handleOpenPreview}
+            disabled={isSaving}
+            className="flex items-center justify-center gap-1.5 bg-[#3B82F6] hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-medium shadow-sm transition-colors disabled:opacity-50 w-full"
+          >
+            <iconify-icon icon="solar:eye-linear" class="text-base"></iconify-icon>
+            {isPreviewLoading ? 'Generando...' : 'Ver PDF'}
+          </button>
         </div>
 
         {/* ── Desktop footer (unchanged) ── */}
@@ -665,18 +661,6 @@ export default function QuoteForm() {
                   Enviando cotización...
                 </span>
               )}
-              {quoteSentMessage && !webhookMutation.isPending && !webhookMutation.isError && (
-                <span className="text-xs text-[#10B981] flex items-center gap-1.5">
-                  <iconify-icon icon="solar:check-circle-linear"></iconify-icon>
-                  {quoteSentMessage}
-                </span>
-              )}
-              {webhookMutation.isError && (
-                <span className="text-xs text-[#F59E0B] flex items-center gap-1.5">
-                  <iconify-icon icon="solar:danger-triangle-linear"></iconify-icon>
-                  Error al enviar — cotización guardada como Enviada
-                </span>
-              )}
               {isEditing && (
                 <button
                   onClick={handleDelete}
@@ -694,20 +678,12 @@ export default function QuoteForm() {
                 <iconify-icon icon="solar:diskette-linear" class="text-lg"></iconify-icon> Guardar Borrador
               </button>
               <button
-                onClick={handleGeneratePDF}
+                onClick={handleOpenPreview}
                 disabled={isSaving}
-                className="px-5 py-2.5 rounded-lg border border-[#334155] bg-[#181B21] text-[#E2E8F0] hover:bg-[#334155]/40 text-sm font-medium disabled:opacity-50 transition-colors flex items-center gap-2"
+                className="bg-[#3B82F6] hover:bg-blue-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-colors disabled:opacity-50 flex items-center gap-2"
               >
-                <iconify-icon icon="solar:file-download-linear" class="text-lg"></iconify-icon>
-                {isGeneratingPDF ? 'Generando PDF...' : 'Generar PDF'}
-              </button>
-              <button
-                onClick={handleSendQuote}
-                disabled={isSaving}
-                className="bg-[#10B981] hover:bg-[#059669] text-white px-6 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-colors disabled:opacity-50 flex items-center gap-2"
-              >
-                <iconify-icon icon="solar:letter-linear" class="text-lg"></iconify-icon>
-                {isSendingQuote ? 'Enviando...' : 'Enviar Cotización'}
+                <iconify-icon icon="solar:eye-linear" class="text-lg"></iconify-icon>
+                {isPreviewLoading ? 'Generando...' : 'Ver PDF'}
               </button>
             </div>
           </div>
@@ -720,6 +696,17 @@ export default function QuoteForm() {
         isOpen={isClientModalOpen}
         onClose={() => setIsClientModalOpen(false)}
         onSuccess={handleClientCreated}
+      />
+
+      {/* Modal de Vista Previa del PDF */}
+      <QuotePDFPreviewModal
+        isOpen={isPDFModalOpen}
+        onClose={handleClosePreviewModal}
+        blobUrl={pdfBlobUrl}
+        quoteIdStr={pdfQuoteIdStr}
+        isSending={isSending}
+        onDownload={handleDownloadFromModal}
+        onSend={handleSendFromModal}
       />
     </div>
   );

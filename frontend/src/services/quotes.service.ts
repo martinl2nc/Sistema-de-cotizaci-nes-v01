@@ -90,7 +90,7 @@ export interface QuoteLineItem {
   subtotal_linea: number;
 }
 
-export type QuoteStatus = 'Aprobada' | 'PDF Generado' | 'Enviada' | 'Cancelada' | 'Borrador';
+export type QuoteStatus = 'Aprobada' | 'Enviada' | 'Cancelada' | 'Borrador';
 
 export interface Quote {
   id: string;

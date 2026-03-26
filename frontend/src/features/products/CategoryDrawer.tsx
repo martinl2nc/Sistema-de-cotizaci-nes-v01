@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import {
   useCategoriesList,
   useCreateCategory,
@@ -22,7 +23,6 @@ export default function CategoryDrawer({ open, onClose }: CategoryDrawerProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const [newName, setNewName] = useState('');
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Reset state when drawer closes
   useEffect(() => {
@@ -30,19 +30,20 @@ export default function CategoryDrawer({ open, onClose }: CategoryDrawerProps) {
       setEditingId(null);
       setEditingName('');
       setNewName('');
-      setErrorMsg(null);
     }
   }, [open]);
 
   // ─── Handlers ───────────────────────────────────────────────
   const handleCreate = () => {
     if (!newName.trim()) return;
-    setErrorMsg(null);
     createMutation.mutate(
       { nombre: newName.trim() },
       {
-        onSuccess: () => setNewName(''),
-        onError: (err) => setErrorMsg(err.message),
+        onSuccess: () => {
+          toast.success('Categoría creada correctamente.');
+          setNewName('');
+        },
+        onError: (err) => toast.error(err.message),
       }
     );
   };
@@ -50,7 +51,6 @@ export default function CategoryDrawer({ open, onClose }: CategoryDrawerProps) {
   const handleStartEdit = (cat: Category) => {
     setEditingId(cat.id);
     setEditingName(cat.nombre);
-    setErrorMsg(null);
   };
 
   const handleCancelEdit = () => {
@@ -60,39 +60,36 @@ export default function CategoryDrawer({ open, onClose }: CategoryDrawerProps) {
 
   const handleSaveEdit = () => {
     if (!editingId || !editingName.trim()) return;
-    setErrorMsg(null);
     updateMutation.mutate(
       { id: editingId, data: { nombre: editingName.trim() } },
       {
         onSuccess: () => {
+          toast.success('Categoría actualizada.');
           setEditingId(null);
           setEditingName('');
         },
-        onError: (err) => setErrorMsg(err.message),
+        onError: (err) => toast.error(err.message),
       }
     );
   };
 
   const handleDelete = async (cat: Category) => {
-    setErrorMsg(null);
-    
     try {
-      // Verificar cuántos productos tiene esta categoría
       const productCount = await getCategoryProductCount(cat.id);
-      
+
       if (productCount > 0) {
-        setErrorMsg(`No se puede eliminar "${cat.nombre}": tiene ${productCount} producto${productCount > 1 ? 's' : ''} asociado${productCount > 1 ? 's' : ''}. Reasigna los productos a otra categoría primero.`);
+        toast.error(`No se puede eliminar "${cat.nombre}": tiene ${productCount} producto${productCount > 1 ? 's' : ''} asociado${productCount > 1 ? 's' : ''}. Reasigna los productos a otra categoría primero.`, { duration: 7000 });
         return;
       }
-      
-      // Si no tiene productos, confirmar eliminación
+
       if (!confirm(`¿Eliminar la categoría "${cat.nombre}"?`)) return;
-      
+
       deleteMutation.mutate(cat.id, {
-        onError: (err) => setErrorMsg(err.message),
+        onSuccess: () => toast.success(`Categoría "${cat.nombre}" eliminada.`),
+        onError: (err) => toast.error(err.message),
       });
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Error al verificar productos');
+      toast.error(err instanceof Error ? err.message : 'Error al verificar productos');
     }
   };
 
@@ -131,12 +128,6 @@ export default function CategoryDrawer({ open, onClose }: CategoryDrawerProps) {
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-
-          {errorMsg && (
-            <div className="bg-[#EF4444]/10 border border-[#EF4444]/50 rounded-lg p-3 text-[#EF4444] text-sm font-medium">
-              {errorMsg}
-            </div>
-          )}
 
           {/* Create new */}
           <div>

@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import MainLayout from '@/layouts/MainLayout';
 import { AuthProvider } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
@@ -11,12 +12,14 @@ const QuoteForm = lazy(() => import('@/pages/quotes/QuoteForm'));
 const ClientsPage = lazy(() => import('@/pages/admin/ClientsPage'));
 const CompanyConfigPage = lazy(() => import('@/pages/admin/CompanyConfigPage'));
 const ProductsPage = lazy(() => import('@/pages/admin/ProductsPage'));
+const SellersPage = lazy(() => import('@/pages/admin/SellersPage'));
 const ComingSoonPage = lazy(() => import('@/pages/admin/ComingSoonPage'));
 const LoginPage = lazy(() => import('@/pages/auth/Login'));
 
 function App() {
   return (
     <AuthProvider>
+      <Toaster position="top-center" theme="dark" duration={5000} richColors />
       <Router>
         <Suspense fallback={<div className="h-screen w-screen flex items-center justify-center bg-[#0F1115] text-[#E2E8F0]">Cargando...</div>}>
           <Routes>
@@ -37,7 +40,7 @@ function App() {
                   <Route path="admin/clientes" element={<ClientsPage />} />
                   <Route path="admin/empresa" element={<CompanyConfigPage />} />
                   <Route path="admin/productos" element={<ProductsPage />} />
-                  <Route path="admin/vendedores" element={<ComingSoonPage />} />
+                  <Route path="admin/vendedores" element={<SellersPage />} />
                 </Route>
                 
                 {/* Catch all to redirect home for now */}
