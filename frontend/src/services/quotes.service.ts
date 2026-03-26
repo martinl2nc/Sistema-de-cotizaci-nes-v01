@@ -22,6 +22,7 @@ const buildHeadPayload = (quoteData: QuoteFormData): QuoteHeadPayload => ({
   descuento_global_monto: quoteData.descuento_global_monto,
   igv_monto: quoteData.igv_monto,
   total_final: quoteData.total_final,
+  seguimiento_automatico: quoteData.seguimiento_automatico,
 });
 
 const normalizeLineItems = (lineas: QuoteLineItem[]) =>
