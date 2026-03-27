@@ -68,6 +68,12 @@
 
 ## 💡 Ideas futuras
 
+### Pedidos / Ordenes de compra
+- [ ] CRUD completo de pedidos /ordenes de compra / servicio
+- [ ] Generación de PDF profesional con @react-pdf/renderer (en el cliente)
+- [ ] Envío de PDF al cliente por Gmail (vía webhook a n8n)
+- [ ] Cambio automático de estado a "Enviada" tras envío exitoso
+
 ### Cotizaciones
 - [ ] **Duplicar cotización** — Clonar una existente para hacer una variante rápidamente
 - [ ] **Historial de cambios** — Ver quién cambió el estado y cuándo (log de auditoría)
